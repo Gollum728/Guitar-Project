@@ -1,3 +1,19 @@
+Key terminology:
+Harmonics -> Specific set of frequencies that are mathematically related to the note being played. For example:
+261.63 Hz   ← Fundamental (1st harmonic)
+523.26 Hz   ← 2nd harmonic
+784.89 Hz   ← 3rd harmonic
+1046.52 Hz  ← 4th harmonic
+1308.15 Hz  ← 5th harmonic
+
+Every frequency is an integer multiple of the first:
+1 × 261.63
+2 × 261.63
+3 × 261.63
+4 × 261.63
+
+Overall - HARMONICS ARE NOT JUST OTHER FREQUENCIES OR BACKGROUND NOISE! THEY ARE RELATED TO THE NOTE BEING PLAYED!!
+
 Waveform
 A pure sound (single frequency) can be represented as a sine wave with certain multipliers. This is a very uncommon scenario, as instruments rarely produce pure sine waves.
 When there are multiple sounds present, then all the pure sound waves mix together to make a wave, but a very uneven wave. The wave becomes much more complex and is virtually impossible to identify the individual frequencies by eye.
