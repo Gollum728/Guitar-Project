@@ -11,7 +11,6 @@ def frequency_to_note(frequency):
     note = notes[MIDI_num % 12]
     octave = str((MIDI_num//12) - 1)
     note+=octave
-    print(note, frequency)
+    return (note, frequency)
 
 frequency_to_note(932.33)
-    

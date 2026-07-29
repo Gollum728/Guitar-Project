@@ -11,6 +11,7 @@ def record():
     recording = sd.rec(int(duration * fs))
     sd.wait()
     recording = recording / np.max(np.abs(recording)) # Increases the amplitude of the recording so that it becomes louder
+    sf.write("recordings/talking-test-demo.wav", recording, fs)
     return recording
 
 record()
