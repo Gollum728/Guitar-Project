@@ -1,1 +1,25 @@
+Frequency to notes:
+Remember that there are 12 semitones in an octave!
+Imagine we have a ratio from one semitone to the next. We'll call that r. That means that r^2 x the current note gives us a note that is 2 semitones above the current note. It's pretty easy to work out the value of r, which is the 12th root of 2 (2^(1/12)), which is roughly 1.059. But this isn't really our problem. In our scenario, we have the current frequency and the new frequency. We have r, because it stays constant. But what we don't have is the number of semitones it goes up or down by. In other words, the power is unknown, and we can rearrange this simple formula to get the power - n = 12log(f/440). We use 440 as our base frequency, which is A4. 
+Once we have this, we use MIDI numbering - a numbering system that allows us to obtain the correct note from the semitone count, as well as the correct octave. We start with 69, since that is what A4 corresponds to. We first work out the MIDI number - midi = 69 + semitone. We then do (midi+semitone) % 12 to get the note, and whatever number that is the index we use to identify the note - each note is stored in a list. Then we do (midi//12) - 1, which gives us the octave.
+
+Why Largest Peak Fails
+The most obvious way of identifying the pitch is to pick the highest peak from the FFT. However, this doesn't always work, due to harmonics (explained in the FFT notes). In a recording, the highest peak may be a harmonic, which is not the same as the note that was played (fundamental). This would mean that the wrong pitch is converted, resulting in the wrong note being detected. Take the guitar. When a string is played, you may play a C4 on the fretboard, but because of the way the strings vibrate, a C5 or C6 may also be picked up, and may be of a higher magnitude than the actual note that was played. 
+This is why relying on only the largest peak for the correct pitch can lead to errors and inconsistences.
+
+Harmonic Product Spectrum (HPS)
+This is an alternative method to more accurately identify which pitch is being played. The entire point of this is to negate the effect of harmonics so that if there are harmonics, they directly contribute to the fundamental note, making it of a higher magnitude. Downsizing is a very important part of this process, and will be explained below.
+Downsizing is just reducing the list. Let's say we have a list [0,1,2,3,4,5]. If we downsize by 2, it means we grab every 2nd element - [0,2,4].
+We downsize the magnitude array obtained from doing the FFT by 2 first, and line it up directly with the frequencies. If we have 261Hz at index 20 and 522Hz at index 40, when we downsize, index 40 becomes index 20 in the new downsized array, meaning that the value at the old index 40 now corresponds to 261Hz instead of 522Hz. The point of downsizing is to naturally align harmonics.
+Once this happens, we multiply the HPS array and downsized array together. This is done so that harmonics that are naturally aligned can directly contribute to the fundamental magnitude. In the example above, downsizing the magnitude at index 40 makes it at index 20 in the downsized array. When we multiply the 2 arrays, there is the magnitude of the harmonic in the downsized array at index 20, and in the magnitude array, there is the magnitude of the fundamental note in the same index, indexo 20 (see example above). When we multiply these and store in the HPS array, it increases the magnitude of the index 20. After multiplying, we truncate the HPS, because the 2 lengths of the array aren't the same - each downsize makes it a fraction of the length of the HPS array. This means when multiplying, there is a section of the HPS array that won't even be multiplied, since the downsized array is not long enough to have values for that far along the list. After downsampling, there are fewer elements. Therefore only the overlapping portion of the arrays can be multiplied, so the HPS array is truncated accordingly.
+Once one downsize is over, we repeat this process. We usually downsize 3 times for these values - [2,3,4]. Once the downsizing is over, it's the same process as largest peak - find the index of the max value in the HPS array, and then use that to find the corresponding frequency, hopefully giving us the correct pitch.
+
+
+
+
+
+
+
+
+
 WRITE UP NOTES TODAY!!
