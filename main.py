@@ -5,6 +5,7 @@ import soundfile as sf
 import determineNote
 import plot
 import pitchDetection
+import record
 
 fs = 44100
 sd.default.samplerate = fs
@@ -12,7 +13,9 @@ sd.default.channels = 1
 
 
 
-recording, soundFS = sf.read("recordings/guitar-c4.wav") # Reading a sound file returns 2 things - the actual numpy recording and the sample rate it was recorded with
+recording, soundFS = record.recordAndReturn()
+recording = recording.squeeze() # Convert shape from (samples, 1) to (samples,) so the FFT can use it as intended
+
 # sd.play(recording)
 # sd.wait()
 print(type(recording))
