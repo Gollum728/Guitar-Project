@@ -13,13 +13,3 @@ Downsizing is just reducing the list. Let's say we have a list [0,1,2,3,4,5]. If
 We downsize the magnitude array obtained from doing the FFT by 2 first, and line it up directly with the frequencies. If we have 261Hz at index 20 and 522Hz at index 40, when we downsize, index 40 becomes index 20 in the new downsized array, meaning that the value at the old index 40 now corresponds to 261Hz instead of 522Hz. The point of downsizing is to naturally align harmonics.
 Once this happens, we multiply the HPS array and downsized array together. This is done so that harmonics that are naturally aligned can directly contribute to the fundamental magnitude. In the example above, downsizing the magnitude at index 40 makes it at index 20 in the downsized array. When we multiply the 2 arrays, there is the magnitude of the harmonic in the downsized array at index 20, and in the magnitude array, there is the magnitude of the fundamental note in the same index, indexo 20 (see example above). When we multiply these and store in the HPS array, it increases the magnitude of the index 20. After multiplying, we truncate the HPS, because the 2 lengths of the array aren't the same - each downsize makes it a fraction of the length of the HPS array. This means when multiplying, there is a section of the HPS array that won't even be multiplied, since the downsized array is not long enough to have values for that far along the list. After downsampling, there are fewer elements. Therefore only the overlapping portion of the arrays can be multiplied, so the HPS array is truncated accordingly.
 Once one downsize is over, we repeat this process. We usually downsize 3 times for these values - [2,3,4]. Once the downsizing is over, it's the same process as largest peak - find the index of the max value in the HPS array, and then use that to find the corresponding frequency, hopefully giving us the correct pitch.
-
-
-
-
-
-
-
-
-
-WRITE UP NOTES TODAY!!
