@@ -15,3 +15,11 @@ def plot_frequencies(frequency, magnitude):
     plt.ylabel("Magnitude")
     plt.grid(True)
     plt.show()
+
+def plot_autocorrelation(results):
+    lags = range(1, len(results)+1)
+    plt.plot(lags, results)
+    plt.title("Autocorrelation")
+    plt.xlabel("Lags (sample)")
+    plt.ylabel("Peaks")
+    plt.show()

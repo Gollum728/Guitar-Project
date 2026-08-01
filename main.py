@@ -16,13 +16,15 @@ sd.default.channels = 1
 #while True:
 recording, soundFS = record.readAudioFile("recordings/guitar-b3.wav")
 recording = recording.squeeze() # Convert shape from (samples, 1) to (samples,) so the FFT can use it as intended
-recording = recording.flatten()
+
 
 start = np.argmax(np.abs(recording) > 0.02)
 
 recording = recording[start:start + int(0.5 * fs)]
 
-plot.plot_sound(recording)
+frequency, autocorellationResults = pitchDetection.autocorrelation(recording, soundFS)
+plot.plot_autocorrelation(autocorellationResults)
+
 
 # sd.play(recording)
 # sd.wait()
@@ -32,11 +34,12 @@ plot.plot_sound(recording)
 
 
 
-
+"""
 pitch = pitchDetection.detectFrequency(recording, soundFS, method="hps")
 #print(pitch)
 note = determineNote.frequency_to_note(pitch)
 print(f"{pitch:.2f} Hz -> {note}")
+"""
 
 # print(magnitude[max])
 # print(frequency[max])
