@@ -14,7 +14,7 @@ sd.default.channels = 1
 
 
 #while True:
-recording, soundFS = record.recordAndReturn(2)
+recording, soundFS = record.readAudioFile("recordings/humming-a4.wav")
 recording = recording.squeeze() # Convert shape from (samples, 1) to (samples,) so the FFT can use it as intended
 
 
@@ -30,7 +30,7 @@ start = max(0, np.argmax(mask) - int(0.02 * fs))
 recording = recording[start:start + int(1.0 * fs)]
 print(np.max(np.abs(recording)))
 
-frequency, autocorellationResults = pitchDetection.autocorrelation(recording, soundFS)
+pitch, autocorellationResults = pitchDetection.autocorrelation(recording, soundFS)
 plot.plot_autocorrelation(autocorellationResults)
 
 
@@ -42,12 +42,13 @@ plot.plot_autocorrelation(autocorellationResults)
 
 
 
-"""
-pitch = pitchDetection.detectFrequency(recording, soundFS, method="hps")
+
 #print(pitch)
-note = determineNote.frequency_to_note(pitch)
+note, midi, targetFrequency = determineNote.frequency_to_note(pitch)
+cents = determineNote.determineCents(pitch, targetFrequency)
 print(f"{pitch:.2f} Hz -> {note}")
-"""
+print(cents)
+
 
 # print(magnitude[max])
 # print(frequency[max])

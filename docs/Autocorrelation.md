@@ -1,0 +1,10 @@
+Autocorrelation
+We've seen that HPS doesn't always work well when there are harmonics involved, since if the harmonics are of a stronger frequency than the fundamental, the wrong frequency can be returned. Autocorrelation is a much more robust process to answer the same problem.
+Instead of using FFT and analysing which frequency is strongest based on the resultant vector of the centre, we try and find when the wave repeats itself. Frequency is the number of cycles per second. The time taken for one cycle is called the period. If we can find when in time the wave repeats itself, we can then find the frequency. Here is an example:
+Say our sound can be represented as [2,3,4,5]. We split the sound into samples (one value of the array) and make a copy it. We then shift our copy by 1 place (1 sample), and multiply every corresponding value like so:
+[2,3,4,5]
+[ ,2,3,4,5] (Empty spaces are padded with 0s)
+We multiply every value that lines up and add the products together - which gives us the total for that particular shift (in this case 1). We then repeat this process multiple times across the sound. The higher the value, the more likely it is that the wave repeats itself. This is because when we get the shift exactly corresponding to the correct frequency, the peaks of the wave start to line up - creating massive spikes when multiplying which are then totaled up. 
+Once we obtain these values, it's not as simple as just picking the highest peak. Since waves repeat multiple times per second, we need to pick the first time the wave has reached a high peak or certain threshold (thresholds are pre-determined), which means we pick the first time the wave has repeated itself. Once we have found the corresponding shift value, we then divide it by our sampling rate to work out at what time it repeats itself. The time taken for one complete repetition is called the period of the note. Then, we do 1/period to work out the frequency.
+If we had picked any peak, then our calculations would have be wrong, resulting in the wrong frequency!
+This method is less prone to harmonics, but can take a long time to do since there may be lots of shifts to perform!
