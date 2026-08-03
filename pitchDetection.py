@@ -140,9 +140,12 @@ def autocorrelation(recording, sampleRate):
             total += (recording[j+i] * recording[j]) # Original x shifted (see notes on this!!)
         results.append(total)
 
+
+    minLag = sampleRate // 1000
+
     sampleShift = 0
-    threshold = 0.3 * max(results)
-    for i in range(1, len(results)-1):
+    threshold = 0.86 * max(results)
+    for i in range(minLag, len(results)-1):
         if (results[i] > results[i-1] and results[i] > results[i+1] and results[i] > threshold):
             sampleShift = i + 1 # Add 1 to account for indexing from 0 - WE START LOOPING FROM 1 NOT 0!!
             break
@@ -154,7 +157,8 @@ def autocorrelation(recording, sampleRate):
         print(i+1, results[i])
     threshold = 0.3 * max(results)
 
-    for i in range(1, len(results)-1):
+
+    for i in range(minLag, len(results)-1):
         if (results[i] > results[i-1] and
             results[i] > results[i+1] and
             results[i] > threshold):

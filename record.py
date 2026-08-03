@@ -8,7 +8,12 @@ sd.default.channels = 1
 
 
 def _recordAudio(duration):
-    recording = sd.rec(int(duration * fs))
+    recording = sd.rec(
+    int(duration * fs),
+    samplerate=fs,
+    channels=1,
+    dtype="float32"
+    )
     sd.wait()
     print(recording[:10])
     print(np.max(np.abs(recording)))

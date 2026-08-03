@@ -14,13 +14,21 @@ sd.default.channels = 1
 
 
 #while True:
-recording, soundFS = record.readAudioFile("recordings/guitar-b3.wav")
+recording, soundFS = record.recordAndReturn(2)
 recording = recording.squeeze() # Convert shape from (samples, 1) to (samples,) so the FFT can use it as intended
 
 
-start = np.argmax(np.abs(recording) > 0.02)
+mask = np.abs(recording) > 0.02
 
-recording = recording[start:start + int(0.5 * fs)]
+if not np.any(mask):
+    print("No note detected - try again.")
+    exit()    # or continue if this is inside a loop
+
+start = max(0, np.argmax(mask) - int(0.02 * fs))
+
+
+recording = recording[start:start + int(1.0 * fs)]
+print(np.max(np.abs(recording)))
 
 frequency, autocorellationResults = pitchDetection.autocorrelation(recording, soundFS)
 plot.plot_autocorrelation(autocorellationResults)
