@@ -14,7 +14,7 @@ sd.default.channels = 1
 
 
 #while True:
-recording, soundFS = record.readAudioFile("recordings/humming-a4.wav")
+recording, soundFS = record.recordAndReturn(3)
 recording = recording.squeeze() # Convert shape from (samples, 1) to (samples,) so the FFT can use it as intended
 
 

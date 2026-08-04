@@ -134,10 +134,9 @@ def parabolicInterpolation(k, frequency, magnitude):
 def autocorrelation(recording, sampleRate):
     print(sampleRate)
     results = []
-    for i in range(1,1001):
+    for i in range(1,750):
         total = 0
-        for j in range(len(recording) - i):
-            total += (recording[j+i] * recording[j]) # Original x shifted (see notes on this!!)
+        total = np.sum(recording[i:] * recording[:-i]) # Original x shifted (see notes on this!!)
         results.append(total)
 
 
