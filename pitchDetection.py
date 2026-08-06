@@ -134,10 +134,12 @@ def parabolicInterpolation(k, frequency, magnitude):
 def autocorrelation(recording, sampleRate):
     print(sampleRate)
     results = []
-    for i in range(1,750):
-        total = 0
-        total = np.sum(recording[i:] * recording[:-i]) # Original x shifted (see notes on this!!)
-        results.append(total)
+    for lag in range(1,750):
+        nsdf = 0
+        numerator = np.sum(recording[lag:] * recording[:-lag]) # Original x shifted (see notes on this!!)
+        denominator = np.sum(recording[:-lag]**2) + np.sum(recording[lag:]**2)
+        nsdf = (2 * numerator) / denominator
+        results.append(nsdf)
 
 
     minLag = sampleRate // 1000
