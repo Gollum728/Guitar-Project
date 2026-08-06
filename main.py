@@ -11,9 +11,11 @@ fs = 44100
 sd.default.samplerate = fs
 sd.default.channels = 1
 
+IN_TUNE_THRESHOLD = 5
+
 def tune():
-    IN_TUNE_THRESHOLD = 5
-    recording, soundFS = record.recordAndReturn(2)
+    
+    recording, soundFS = record.recordAndReturn(0.75)
     recording = recording.squeeze() # Convert shape from (samples, 1) to (samples,) so the FFT can use it as intended
 
 
@@ -21,7 +23,7 @@ def tune():
 
     if not np.any(mask):
         print("No note detected - try again.")
-        exit()    # or continue if this is inside a loop
+        return None
 
     start = max(0, np.argmax(mask) - int(0.02 * fs))
 
@@ -32,9 +34,25 @@ def tune():
     
 
     pitch = detector.pitchDetection(recording, soundFS)
+    if pitch is None:
+        return None
     note, midi, targetFrequency = determineNote.frequency_to_note(pitch)
     cents = determineNote.determineCents(pitch, targetFrequency)
-    output = f"Note : {note} \n Played frequency : {pitch} \n Expected frequency : {targetFrequency} \n Cents : {cents} \n"
+
+
+
+    return note, pitch, targetFrequency, cents
+    
+   
+
+
+
+while True:
+    result = tune()
+    if result is None:
+        continue
+    note, pitchPlayed, targetFrequency, cents = result
+    output = f"Note : {note} \n Played frequency : {pitchPlayed} \n Expected frequency : {targetFrequency} \n Cents : {cents} \n"
     if abs(cents) <= IN_TUNE_THRESHOLD:
         output += f"In tune"
     elif cents > 0:
@@ -42,11 +60,6 @@ def tune():
     else:
         output += f"Tune up"
     print(output)
-
-tune()
-
-#while True:
-
 
 
 
