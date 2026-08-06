@@ -6,6 +6,7 @@ import determineNote
 import plot
 import pitchDetection
 import record
+import productionPitchDetection as ppd
 
 fs = 44100
 sd.default.samplerate = fs
@@ -13,7 +14,7 @@ sd.default.channels = 1
 
 def tune():
     IN_TUNE_THRESHOLD = 5
-    recording, soundFS = record.readAudioFile("recordings/guitar-e4.wav")
+    recording, soundFS = record.recordAndReturn(2)
     recording = recording.squeeze() # Convert shape from (samples, 1) to (samples,) so the FFT can use it as intended
 
 
@@ -31,6 +32,8 @@ def tune():
 
     pitch, autocorellationResults = pitchDetection.autocorrelation(recording, soundFS)
     plot.plot_autocorrelation(autocorellationResults)
+
+    print(ppd.pitchDetection(recording, soundFS))
     # note, midi, targetFrequency = determineNote.frequency_to_note(pitch)
     # cents = determineNote.determineCents(pitch, targetFrequency)
     # output = f"Note : {note} \n Played frequency : {pitch} \n Expected frequency : {targetFrequency} \n Cents : {cents} \n"
