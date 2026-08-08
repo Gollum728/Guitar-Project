@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guitar Tuner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <main class="tuner">
+
+        <h1>Guitar Tuner</h1>
+
+        <section class="tuning-display">
+
+            <div class="note" id="note">E4</div>
+
+            <div class="frequency" id="frequency">329.63 Hz</div>
+
+            <div class="meter">
+
+                <div class="meter-labels">
+                    <span>♭</span>
+                    <span>♯</span>
+                </div>
+
+                <div class="meter-line">
+                    <div class="centre-line"></div>
+                    <div class="indicator" id="indicator"></div>
+                </div>
+
+                <div class="cents" id="cents">0 cents</div>
+
+            </div>
+
+            <div class="status" id="status">IN TUNE</div>
+
+            <div class="target" id="target">
+                Target: 329.63 Hz
+            </div>
+
+        </section>
+
+        <button class="tune-button" id="tune-button">Start Tuning</button>
+
+    </main>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>
