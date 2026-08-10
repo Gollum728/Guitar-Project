@@ -1,6 +1,6 @@
 import numpy as np
 
-def detectFrequency(recording, sample_rate, method):
+def detectFrequency(recording, sample_rate):
     
     recording = recording.flatten()
     window = np.hanning(len(recording))

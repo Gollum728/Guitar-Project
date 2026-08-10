@@ -1,6 +1,12 @@
 import numpy as np
+import plot
 
 def autocorrelation(recording, sampleRate):
+    print("Recording samples:", len(recording))
+    print("Recording mean:", np.mean(recording))
+    print("Recording std:", np.std(recording))
+
+
     print(sampleRate)
     results = []
     for lag in range(1,750):
@@ -9,30 +15,64 @@ def autocorrelation(recording, sampleRate):
         denominator = np.sum(recording[:-lag]**2) + np.sum(recording[lag:]**2)
         nsdf = (2 * numerator) / denominator
         results.append(nsdf)
+    print("NSDF range:", min(results), max(results))
+    print(results[:20])
 
-
-    minLag = sampleRate // 1000
+    maxFrequency = 1500
+    minLag = int(sampleRate / maxFrequency)
 
     sampleShift = 0
-    threshold = 0.86 * max(results)
-    for i in range(minLag, len(results)-1):
-        if (results[i] > results[i-1] and results[i] > results[i+1] and results[i] > threshold):
-            sampleShift = i + 1 # Add 1 to account for indexing from 0 - WE START LOOPING FROM 1 NOT 0!!
-            break
-
-    
-    period = sampleShift/sampleRate
-    frequency = 1/period
-    for i in range(35, 110):
-        print(i+1, results[i])
-    threshold = 0.3 * max(results)
+    threshold = 0.90 * max(results)
+    print(f"Maximum NSDF: {max(results):.3f}")
+    print(f"Threshold: {threshold:.3f}")
 
 
-    for i in range(minLag, len(results)-1):
+    peaks = []
+
+    for i in range(minLag, len(results) - 1):
         if (results[i] > results[i-1] and
             results[i] > results[i+1] and
             results[i] > threshold):
-            print(i + 1, results[i])
-    print(f"Detected lag: {sampleShift}")
+
+            peaks.append((i + 1, results[i]))
+    
+
+    scores = {lag: 0 for lag, value in peaks}
+    if not peaks:
+        return None
+
+    
+    for lag, value in peaks:
+        print(f"\nCandidate: {lag}")
+
+        for multiple in range(2, 6):
+            expected = lag / multiple
+            closestLag = min(scores.keys(), key=lambda peak: abs(peak-expected)) # Finds the difference between every peak and the expected, then finds the peak that produces the smallest difference
+            difference = abs(closestLag-expected) # Sees how close the values of the expected and closetLag are
+            if difference < 3:
+                scores[closestLag] += value / (1 + difference)
+                
+
+                print(
+                    f"{multiple}x -> {expected:.1f} "
+                    f"-> {closestLag} "
+                    f"(difference {difference:.2f}, "
+                )
+    
+    print("\nScores:")
+    for lag, score in scores.items():
+        print(f"Lag: {lag}, Score: {score}")
+
+    
+
+    
+    bestLag = max(scores, key=scores.get)
+
+    frequency = sampleRate / bestLag
+
+    print(f"Detected lag: {bestLag}")
     print(f"Frequency: {frequency:.2f} Hz")
-    return frequency, results
+
+    
+    plot.plot_autocorrelation(results)
+    return frequency

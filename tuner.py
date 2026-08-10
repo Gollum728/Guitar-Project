@@ -4,6 +4,7 @@ import record
 from Pitch_Detection import detector
 import time
 import numpy as np
+from Pitch_Detection.Algorithms import autocorrelation
 
 fs = 44100
 sd.default.samplerate = fs
@@ -19,6 +20,11 @@ def tune():
     print(f"Recording: {time.perf_counter() - timer_start:.3f}s")
 
     recording = recording.squeeze() # Convert shape from (samples, 1) to (samples,) so the FFT can use it as intended
+    recording = recording - np.mean(recording)
+    part1 = recording[:len(recording)//3]
+    part2 = recording[len(recording)//3:2*len(recording)//3]
+    part3 = recording[2*len(recording)//3:]
+
     rms = np.sqrt(np.mean(recording ** 2))
     peak = np.max(np.abs(recording))
 
@@ -31,10 +37,30 @@ def tune():
     
     timer_start = time.perf_counter()
 
+    #FFT
+    fft = np.fft.rfft(recording * np.hanning(len(recording)))
+    magnitude = np.abs(fft)
+    frequency = np.fft.rfftfreq(len(recording), 1 / soundFS)
+
+    indices = np.argsort(magnitude)[-20:][::-1]
+
+    for i in indices:
+        print(f"{frequency[i]:.2f} Hz -> {magnitude[i]:.5f}")
+
     
 
+    #Autocorrelation
+    for i, part in enumerate([part1, part2, part3], 1):
+        print(f"\n--- Part {i} ---")
 
-    print(recording.dtype)
+        frequency = autocorrelation.autocorrelation(part, soundFS)
+
+        if frequency is None:
+            print("No pitch detected")
+        else:
+            print(f"Detected: {frequency:.2f} Hz")
+
+    #pYIN
     pitch = detector.pitchDetection(recording, soundFS)
     print(f"Pitch detection: {time.perf_counter() - timer_start:.3f}s")
     if pitch is None:
