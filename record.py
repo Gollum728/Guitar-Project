@@ -15,21 +15,19 @@ def _recordAudio(duration):
     dtype="float32"
     )
     sd.wait()
-    print(recording[:10])
-    print(np.max(np.abs(recording)))
     peak = np.max(np.abs(recording))
     # if peak > 0:
     #     recording = recording/peak # Increases the amplitude of the recording so that it becomes louder
+
+
+
     return recording
 
 def recordAndSave():
     audio = _recordAudio(3)
     print(sd.query_devices())
     sf.write("recordings/guitar-b3.wav", audio, fs)
-    print(sd.default.device)
-    print(sd.default.samplerate)
-    print(sd.default.channels)
-    print(sd.default.dtype)
+
     
 def recordAndReturn(duration):
     audio = _recordAudio(duration)
