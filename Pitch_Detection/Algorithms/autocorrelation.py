@@ -131,5 +131,5 @@ def autocorrelation(recording, sampleRate):
     print(f"Frequency: {frequency:.2f} Hz")
 
     
-    plot.plot_autocorrelation(results)
+    #plot.plot_autocorrelation(results)
     return frequency

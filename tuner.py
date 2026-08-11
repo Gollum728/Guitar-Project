@@ -5,6 +5,7 @@ from Pitch_Detection import detector
 import time
 import numpy as np
 from Pitch_Detection.Algorithms import autocorrelation
+from Pitch_Detection.Algorithms import mpm
 
 fs = 44100
 sd.default.samplerate = fs
@@ -13,6 +14,7 @@ sd.default.channels = 1
 IN_TUNE_THRESHOLD = 5
 MIC_THRESHOLD = 0.005
 
+"""
 def tune():
     timer_start = time.perf_counter()
 
@@ -78,3 +80,124 @@ def tune():
 
     print(f"Detected: {pitch:.2f} Hz | {note} | {cents:.1f} cents | {status}")
     return note, pitch, targetFrequency, cents, status
+"""
+fs = 44100
+
+sd.default.samplerate = fs
+sd.default.channels = 1
+
+IN_TUNE_THRESHOLD = 5
+
+
+def tune():
+
+    timer_start = time.perf_counter()
+
+    # Record 0.75 seconds
+    recording, soundFS = record.recordAndReturn(0.75)
+
+    recording = recording.squeeze()
+
+    # Remove DC offset
+    recording = recording - np.mean(recording)
+
+    print(
+        f"Recording: "
+        f"{time.perf_counter() - timer_start:.3f}s"
+    )
+
+    # Basic recording information
+    rms = np.sqrt(
+        np.mean(recording ** 2)
+    )
+
+    peak = np.max(
+        np.abs(recording)
+    )
+
+    print(
+        f"RMS: {rms:.5f}"
+    )
+
+    print(
+        f"Peak: {peak:.5f}"
+    )
+
+    print(
+        f"Analysed length: "
+        f"{len(recording) / soundFS:.3f}s"
+    )
+
+    # -------------------------
+    # MPM pitch detection
+    # -------------------------
+
+    pitch = mpm.mpm(
+        recording,
+        soundFS
+    )
+
+    if pitch is None:
+
+        print(
+            "No pitch detected"
+        )
+
+        return None
+
+    print(
+        f"Detected pitch: "
+        f"{pitch:.2f} Hz"
+    )
+
+    # -------------------------
+    # Convert frequency to note
+    # -------------------------
+
+    note, midi, targetFrequency = (
+        determineNote.frequency_to_note(
+            pitch
+        )
+    )
+
+    cents = determineNote.determineCents(
+        pitch,
+        targetFrequency
+    )
+
+    # -------------------------
+    # Determine tuning status
+    # -------------------------
+
+    if abs(cents) <= IN_TUNE_THRESHOLD:
+
+        status = "In tune"
+
+    elif cents > 0:
+
+        status = "Tune down"
+
+    else:
+
+        status = "Tune up"
+
+    print(
+        f"Detected: "
+        f"{pitch:.2f} Hz | "
+        f"{note} | "
+        f"{cents:.1f} cents | "
+        f"{status}"
+    )
+
+    print(
+        f"Total time: "
+        f"{time.perf_counter() - timer_start:.3f}s"
+    )
+
+    return (
+        note,
+        pitch,
+        targetFrequency,
+        cents,
+        status
+    )
