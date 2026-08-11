@@ -2,9 +2,13 @@ import numpy as np
 import plot
 
 def autocorrelation(recording, sampleRate):
+    recording = recording * 10
+    recording = recording - np.mean(recording)
     print("Recording samples:", len(recording))
     print("Recording mean:", np.mean(recording))
     print("Recording std:", np.std(recording))
+    print("Max amplitude:", np.max(np.abs(recording)))
+    print("RMS:", np.sqrt(np.mean(recording**2)))
 
 
     print(sampleRate)
@@ -47,10 +51,10 @@ def autocorrelation(recording, sampleRate):
 
         for multiple in range(2, 6):
             expected = lag / multiple
-            closestLag = min(scores.keys(), key=lambda peak: abs(peak-expected)) # Finds the difference between every peak and the expected, then finds the peak that produces the smallest difference
+            closestLag, closestValue = min(peaks, key=lambda peak: abs(peak[0]-expected)) # Finds the difference between every peak and the expected, then finds the peak that produces the smallest difference
             difference = abs(closestLag-expected) # Sees how close the values of the expected and closetLag are
             if difference < 3:
-                scores[closestLag] += value / (1 + difference)
+                scores[closestLag] += 1 / (1 + difference)
                 
 
                 print(
@@ -60,13 +64,66 @@ def autocorrelation(recording, sampleRate):
                 )
     
     print("\nScores:")
-    for lag, score in scores.items():
-        print(f"Lag: {lag}, Score: {score}")
+    for lag in sorted(scores):
+        value = next(value for peak, value in peaks if peak == lag)
 
+        print(
+            f"Lag {lag}: "
+            f"Frequency = {sampleRate / lag:.2f} Hz, "
+            f"NSDF = {value:.3f}, "
+            f"Score = {scores[lag]:.3f}"
+        )
+    
+    print("\nHarmonic support:")
+
+
+    for candidateLag in scores:
+
+        print(f"\nLag {candidateLag}:")
+
+        for harmonic in range(2, 6):
+
+            expectedLag = candidateLag / harmonic
+
+            closestLag, closestValue = min(
+                peaks,
+                key=lambda peak: abs(peak[0] - expectedLag)
+            )
+
+            difference = abs(closestLag - expectedLag)
+
+            if difference < 3:
+                print(
+                    f"  {harmonic}x: "
+                    f"expected {expectedLag:.2f}, "
+                    f"found {closestLag}, "
+                    f"difference {difference:.2f}, "
+                    f"NSDF {closestValue:.3f}"
+                )
+            else:
+                print(
+                    f"  {harmonic}x: "
+                    f"expected {expectedLag:.2f}, "
+                    f"no match"
+                )
+    
+    for lag in [67, 134]:
+        value = next((value for peak, value in peaks if peak == lag), None)
+
+        if value is not None:
+            print(f"Lag {lag}: NSDF = {value:.6f}, Score = {scores[lag]:.6f}")
+        else:
+            print(f"Lag {lag}: not detected as a peak")
+
+
+ 
     
 
     
-    bestLag = max(scores, key=scores.get)
+    bestLag = max(
+        peaks,
+        key=lambda peak: peak[1]
+    )[0]
 
     frequency = sampleRate / bestLag
 
