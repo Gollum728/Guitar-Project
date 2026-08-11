@@ -54,7 +54,7 @@ def autocorrelation(recording, sampleRate):
             closestLag, closestValue = min(peaks, key=lambda peak: abs(peak[0]-expected)) # Finds the difference between every peak and the expected, then finds the peak that produces the smallest difference
             difference = abs(closestLag-expected) # Sees how close the values of the expected and closetLag are
             if difference < 3:
-                scores[closestLag] += 1 / (1 + difference)
+                scores[closestLag] += closestValue / (1 + difference)
                 
 
                 print(
@@ -121,9 +121,9 @@ def autocorrelation(recording, sampleRate):
 
     
     bestLag = max(
-        peaks,
-        key=lambda peak: peak[1]
-    )[0]
+        scores.keys(),
+        key=lambda lag: scores[lag]
+    )
 
     frequency = sampleRate / bestLag
 
