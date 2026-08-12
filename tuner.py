@@ -126,7 +126,8 @@ def tune():
         status = "Tune up"
 
     print(
-        f"Detected: {pitch:.2f} Hz | "
+        f"Raw: {pitch:.2f} Hz | "
+        f"Corrected: {detectedFrequency:.2f} Hz | "
         f"{note} | "
         f"{cents:.1f} cents | "
         f"{status}"

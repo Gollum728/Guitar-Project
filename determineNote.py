@@ -37,12 +37,12 @@ def snapToKnownString(frequency):
 
     for name, target in OPEN_STRINGS.items():
         for octave_variant in (frequency, frequency / 2, frequency * 2):
-            centsDiff = determineCents(octave_variant, target)
+            centsDiff = abs(determineCents(octave_variant, target))
             if centsDiff < best_diff_cents:
                 best_diff_cents = centsDiff
                 best_name = name
                 best_freq = octave_variant
     
     if best_diff_cents > maxCent:
-        return None, None
+        return None, None, None
     return best_name, best_freq, OPEN_STRINGS[best_name]
