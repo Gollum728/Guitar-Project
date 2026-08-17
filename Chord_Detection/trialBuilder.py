@@ -13,5 +13,3 @@ def buildTriad(root, offsets):
         nextNote = notes[nextNoteIndex]
         triad.append(nextNote)
     return triad
-
-print(buildTriad("C", (0,3,7)))
