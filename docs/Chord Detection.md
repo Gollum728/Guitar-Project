@@ -1,0 +1,20 @@
+Chord Detection:
+Chord detection presents a new kind of issue - there are multiple notes being played at the same time. Methods like autocorrelation don't work for multiple notes, which is why I had to go back to an approach I used near the start of this project - FFT. This helps us find several fundamentals at once, from overlapping harmonics and other sounds.
+
+At the moment, we have decided to just show the chord name, not the notes, as a v1. This means we can then track ntoes through a 12 pitch system and counting the number of occurrences and their strength, rather than having to keep up with the specific octave as well. This is a much easier approach for a V1, and is something that I can develop once a demo of this feature is done.
+
+The problem:
+With FFT with 1 note, you can pick the highest peak and say that that peak is the note (most of the time at least). You might say that for chords, we can just do the same - pick the top N peaks (where N is the number of notes in the chord). But that would be a very wrong assumption. In some cases, the top notes may all just be harmonics of the same note, rather than separate notes. This doesn't help with chord detection as all, since you would just be detecting one note and ignoring the others.
+The solution:
+Rather than pick the top N peaks, I decided to go with an approach that considers all the frequency bins from a specific range (in this case, 70-1000Hz). This allows for all the peaks to be considered, regardless of how big their magnitude is, but also works well for harmonics. Since the 2nd and 4th harmonics are all the same note as the fundamental, it means those harmonics that are high help contribute to the root note (using the 12 pitch system), which makes them more likely to be picked as a note in the played chord.
+
+The problem with this approach:
+Wehen testing a single note, the open B string on the guitar, F# was detected as the strong note played. Musically, a 3rd harmonic is a perfect fifth above the root, not the same pitch class. The 2nd, 4th, 8th harmonics are all the same pitch class, whereas the 3rd and 5th are not. F# is the 3rd harmonic of B, which explains why it was recorded as the dominant note.
+There is one benefit to this though. The leakage isn't actually a false positive - it happens to reinforce the 5th, which is already a note in a chord. This would be a problem for chords that aren't simply major/minor, but since those are out of scope for v1, it isn't an issue at the momement.
+Due to this problem, when playing chords, the root note isn't usually at the top. The fifth usually outscores it. At first, I though it was the open strings that were contributing to the harmonics, but when I played them without, I got the same results. This led me to the conclusion that I cannot just rely on the root being the highest note, and rather need to evaluate it as an entire triad.
+
+Scoring formula:
+To check the effectiveness of triads, I came up with a formula. At first I decided to just add the 3 magnitudes of each note in the triad and compare them to others. However, a major flaw with that approach is that it doesn't account for energy elsewhere that may not be in that triad. It also doesn't work that well if the recording is a different volume, hence why I decided to use another formula - (sum of the traid) / (sum of all 12). This works much better because it helps to see which triad contributes the most to the sound signature, which is likely to be the chord played.
+
+Major/Minor relativity:
+Major and minor chords are relative to each other. C major and A minor share 2 of 3 notes, and real world recordings showed that their scores came out very close. This is a musical limitation and not an algorithmic one, so to counteract this, instead of returning the chord, I will use a confidence system and rank the potential chords through that.
