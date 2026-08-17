@@ -9,7 +9,8 @@ def detectFrequency(recording, sample_rate):
     fft = np.fft.rfft(recording)
     magnitude = np.abs(fft)
     frequency = np.fft.rfftfreq(len(recording), d=1/sample_rate)
-    
+    return magnitude, frequency
+
     # if method == "max":
     #     return _highestPeak(frequency, magnitude)
     # elif method == "hps":

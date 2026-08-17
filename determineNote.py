@@ -5,6 +5,7 @@ notes = (
     "F#", "G", "G#", "A", "A#", "B"
     )
 def frequency_to_note(detectedFrequency):
+    #TODO Needs refactoring to reduce code duplication - splitting up MIDI, note, targetFreq would help with using those parts individually if needed
     semitone = round(math.log(detectedFrequency/440, 2) * 12)
     MIDI_num = 69+semitone
     note = notes[MIDI_num % 12]
@@ -15,6 +16,7 @@ def frequency_to_note(detectedFrequency):
     targetFrequency = 440 * (2**(semitone/12))
 
     return (note, MIDI_num, targetFrequency)
+
 
 
 def determineCents(detectedFrequency, expectedFrequency):
@@ -46,3 +48,4 @@ def snapToKnownString(frequency):
     if best_diff_cents > maxCent:
         return None, None, None
     return best_name, best_freq, OPEN_STRINGS[best_name]
+

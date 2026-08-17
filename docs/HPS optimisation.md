@@ -1,6 +1,7 @@
 Hann Windowing
 Multiplies the audio by a smooth function before the FFT. FFT assumes that the signal repeats forever because at its core, the signal is made up of sine and cosine waves, which repeat forever. If there is an abrupt sound at the end but not at the start, when we repeat the wave it creates inconsistencies, which could mean the wrong frequency is detected. The aim for this is to reduce spectral leakage, which is energy from one frequency spreading to adjacent FFT bins because the sampled waveform doesn't complete an exact number of cycles.
 One important thing to note is that while this does help, if there are harmonics present, then it can still interfere with the fundamental. The Hann Window just helps for a more accurate FFT, but if the FFT itself is flawed, then no amount of windowing will help distinguish a harmonic from a fundamental.
+In reality, frequencies do not cut off perfectly at the boundaries. If a pure 321.5 Hz tone plays, its energy will leak and show up in both the 320 Hz and 322 Hz bins. We can use windowing functions (like Hann or Hamming) to control this overlap and leakage.
 
 Parabolic Interpolation
 Frequencies are in bins, so when a magnitude is highest it returns that specific bin that the signal came from. Problem is, bins go up in intervals, and they can't cover each frequency. So HPS may return a frequency, but it may not be 100% accurate due to the spacing between bins. This is where parabolic interpolation comes in.
