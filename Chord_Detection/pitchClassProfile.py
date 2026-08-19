@@ -20,6 +20,7 @@ def pitchClassProfile(recording, sampleRate):
         magnitude = adjustedMagnitudes[index]
         pitchDict[rawNote] += magnitude
     
-    sortedDict = dict(sorted(pitchDict.items(), key = lambda x: x[1], reverse = True)[:5])
-    for key, value in sortedDict.items():
-        print(f"{key} -> {value}")
+    # sortedDict = dict(sorted(pitchDict.items(), key = lambda x: x[1], reverse = True)[:5])
+    # for key, value in sortedDict.items():
+    #     print(f"{key} -> {value}")
+    return pitchDict
