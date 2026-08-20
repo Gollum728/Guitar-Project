@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chord Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <main class="tuner">
+
+        <h1>Chord Detector</h1>
+
+        <section class="tuning-display">
+
+            <div class="note" id="chord">C major</div>
+
+            <div class="frequency" id="score">Match: 74.7%</div>
+
+            <div class="status confident" id="confidence-status">CONFIDENT</div>
+
+            <div class="target" id="second-guess">
+                Could also be: A minor
+            </div>
+
+        </section>
+
+        <button class="tune-button" id="detect-button">Detect Chord</button>
+
+    </main>
+    <script src="{{ url_for('static', filename='chordScript.js') }}"></script>
+
+</body>
+</html>

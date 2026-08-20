@@ -143,3 +143,18 @@ h1 {
 }
 
 
+.status.confident {
+    color: green;
+}
+
+.status.uncertain {
+    color: orange;
+}
+
+#second-guess {
+    display: none;
+}
+
+#second-guess.visible {
+    display: block;
+}

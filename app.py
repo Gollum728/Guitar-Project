@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify
 from tuner import tune
+from Chord_Detection import chordDetector
 
 app = Flask(__name__)
 
@@ -25,6 +26,23 @@ def run_tuner():
         "cents": cents,
         "status": status
     })
+
+@app.route("/chord")
+def showChordPage():
+    return render_template("chordPage.html")
+
+@app.route("/chordLogic")
+def chordLogic():
+    result = chordDetector.detectChord()
+    if result == None:
+        return jsonify({"error": "No chord detected"})
+    best, confidence, secondBest = result
+    return jsonify({
+        "best" : best,
+        "confidence" : confidence,
+        "secondBest" : secondBest
+    })
+
 
 
 if __name__ == "__main__":

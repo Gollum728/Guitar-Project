@@ -2,6 +2,7 @@ from Chord_Detection import pitchClassProfile
 from Chord_Detection import scoreTriads
 from Chord_Detection import triadBuilder
 import numpy as np
+import record
 
 QUALITIES = [
     ("major", triadBuilder.MAJOR_OFFSET),
@@ -10,29 +11,32 @@ QUALITIES = [
 
 notes = triadBuilder.notes
 
-def detectChord(recording, sampleRate):
+def detectChord():
+    recording, sampleRate = record.recordAndReturn(0.5)
+    rms = np.sqrt(np.mean(recording ** 2))
+    if rms < 0.005:
+        return None
     scores = []
     pitchResults = pitchClassProfile.pitchClassProfile(recording, sampleRate)
     compressedResults = {note: value ** 0.5 for note, value in pitchResults.items()} # Reduces the effect of open strings without altering which notes are present (see notes!!)
     for note in pitchResults.keys():
         for chord in QUALITIES:
             triad = triadBuilder.buildTriad(note, chord[1])
-            oldScore = scoreTriads.scoreTriads(triad, compressedResults)
+            #oldScore = scoreTriads.scoreTriads(triad, compressedResults)
 
             triadProfile = triadBuilder.expectedProfileForTriad(triad)
             newScore = _cosineSimilarity(triadProfile, compressedResults)
             chordName = f"{note} {chord[0]}"
-            chordScore = (chordName, triad, oldScore, newScore)
+            chordScore = (chordName, triad, newScore)
             scores.append(chordScore)
-    scoresByOld = sorted(scores, key=lambda x: x[2], reverse=True)
-    scoresByNew = sorted(scores, key=lambda x: x[3], reverse=True)
 
-    #scores.sort(reverse=True, key=lambda x: x[2])
-    # best = scores[0]
-    # secondBest = scores[1]
-    # confidence = best[2] - secondBest[2]
-    # return best, confidence, secondBest, scores
-    return scoresByOld, scoresByNew
+
+    scores.sort(reverse=True, key=lambda x: x[2])
+    best = scores[0]
+    secondBest = scores[1]
+    confidence = best[2] - secondBest[2]
+    return best, confidence, secondBest
+    # return scoresByOld, scoresByNew
 
 
 def _cosineSimilarity(profileA, profileB):

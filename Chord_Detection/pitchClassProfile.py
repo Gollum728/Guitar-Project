@@ -14,6 +14,7 @@ def pitchClassProfile(recording, sampleRate):
     upperBound = int(1000/binFrequency) # Gets the index of where 2000Hz is
     adjustedFrequencies = frequencies[lowerBound:upperBound+1]
     adjustedMagnitudes = magnitudes[lowerBound:upperBound+1]
+    
     for index, frequency in enumerate(adjustedFrequencies):
         note, midi, targetFrequency = determineNote.frequency_to_note(frequency)
         rawNote = notes[midi%12]
