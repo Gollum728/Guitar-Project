@@ -15,6 +15,89 @@ body {
     background-color: #f5f5f5;
 }
 
+
+/* =========================
+   HOME PAGE
+   ========================= */
+
+.home-container {
+    width: 700px;
+    max-width: 90%;
+
+    padding: 45px;
+
+    text-align: center;
+
+    background-color: white;
+    border-radius: 20px;
+}
+
+.home-container h1 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 36px;
+}
+
+.subtitle {
+    font-size: 20px;
+    margin-top: 0;
+    margin-bottom: 35px;
+}
+
+.tool-container {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+}
+
+.tool-card {
+    flex: 1;
+
+    padding: 30px 20px;
+
+    background-color: #fafafa;
+    border-radius: 15px;
+
+    text-decoration: none;
+    color: black;
+
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tool-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+}
+
+.tool-card h2 {
+    margin-top: 0;
+    font-size: 24px;
+}
+
+.tool-card p {
+    min-height: 45px;
+
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.tool-button {
+    display: inline-block;
+
+    margin-top: 15px;
+    padding: 10px 18px;
+
+    background-color: #eeeeee;
+    border-radius: 8px;
+
+    font-size: 16px;
+}
+
+
+/* =========================
+   TUNER
+   ========================= */
+
 .tuner {
     width: 500px;
     padding: 40px;
@@ -87,8 +170,8 @@ h1 {
 
     background-color: #222;
     border-radius: 50%;
-    transition: left 0.15s ease;
 
+    transition: left 0.15s ease;
 }
 
 .cents {
@@ -119,6 +202,7 @@ h1 {
     border-radius: 8px;
 
     cursor: pointer;
+
     transition: transform 0.1s ease;
 }
 
@@ -142,6 +226,9 @@ h1 {
     color: #777;
 }
 
+/* =========================
+   CHORD DETECTOR
+   ========================= */
 
 .status.confident {
     color: green;

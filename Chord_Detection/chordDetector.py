@@ -12,7 +12,7 @@ QUALITIES = [
 notes = triadBuilder.notes
 
 def detectChord():
-    recording, sampleRate = record.recordAndReturn(0.5)
+    recording, sampleRate = record.recordAndReturn(0.75)
     rms = np.sqrt(np.mean(recording ** 2))
     if rms < 0.005:
         return None
@@ -34,8 +34,9 @@ def detectChord():
     scores.sort(reverse=True, key=lambda x: x[2])
     best = scores[0]
     secondBest = scores[1]
-    confidence = best[2] - secondBest[2]
-    return best, confidence, secondBest
+    confidence = float(best[2] - secondBest[2])
+    print(best[0], confidence, secondBest[0])
+    return best[0], confidence, secondBest[0]
     # return scoresByOld, scoresByNew
 
 

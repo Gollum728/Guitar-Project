@@ -5,7 +5,7 @@ const button = document.getElementById("tune-button");
 
 async function tune() {
 
-    const response = await fetch("/tune");
+    const response = await fetch("/tunerLogic");
     const data = await response.json();
 
     if (data.error) {

@@ -1,5 +1,5 @@
 const button = document.getElementById("detect-button");
-
+button.addEventListener("click", detectChord)
 
 async function detectChord() {
     button.disabled = true;
@@ -21,9 +21,9 @@ async function detectChord() {
         return;
     }
 
-    document.getElementById("chord").textContent = data.chord;
+    document.getElementById("chord").textContent = data.best;
 
-    document.getElementById("score").textContent = `Match: ${(data.score * 100).toFixed(1)}%`;
+    document.getElementById("score").textContent = `Match: ${(data.confidence * 100).toFixed(1)}%`;
 
 
     const isConfident = data.confidence >= 0.025
@@ -32,7 +32,7 @@ async function detectChord() {
     statusEl.className = "status " + (isConfident ? "confident" : "uncertain");
     const secondGuessEl = document.getElementById("second-guess");
     if (!isConfident){
-        secondGuessEl.textContent = `Could also be ${data.secondGuess}`
+        secondGuessEl.textContent = `Could also be ${data.secondBest}`
         secondGuessEl.classList.add("visible")
     }
     else{

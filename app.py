@@ -4,13 +4,17 @@ from Chord_Detection import chordDetector
 
 app = Flask(__name__)
 
-
 @app.route("/")
 def home():
+    return render_template("homepage.html")
+
+
+@app.route("/tuner")
+def tuner():
     return render_template("index.html")
 
 
-@app.route("/tune")
+@app.route("/tunerLogic")
 def run_tuner():
     result = tune()
 

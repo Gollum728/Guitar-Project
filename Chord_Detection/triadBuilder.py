@@ -1,6 +1,8 @@
 MAJOR_OFFSET = (0,4,7)
 MINOR_OFFSET = (0,3,7)
 
+
+
 HARMONIC_WEIGHTS = {
     1: 1.0,    # fundamental, same pitch class
     2: 0.5,    # octave, same pitch class

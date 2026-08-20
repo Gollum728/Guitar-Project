@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Tools</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="home-container">
+        <h1>Guitar Tools</h1>
+        <p class="subtitle">Choose a tool</p>
+
+        <div class="tool-container">
+
+            <a href="/tuner" class="tool-card">
+                <h2>Guitar Tuner</h2>
+                <p>Accurately tune your guitar strings.</p>
+                <span class="tool-button">Open Tuner</span>
+            </a>
+
+            <a href="/chord" class="tool-card">
+                <h2>Chord Detector</h2>
+                <p>Play a chord and identify what you're playing.</p>
+                <span class="tool-button">Open Chord Detector</span>
+            </a>
+
+        </div>
+    </div>
+
+</body>
+</html>
