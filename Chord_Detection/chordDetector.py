@@ -6,7 +6,11 @@ import record
 
 QUALITIES = [
     ("major", triadBuilder.MAJOR_OFFSET),
-    ("minor", triadBuilder.MINOR_OFFSET)
+    ("minor", triadBuilder.MINOR_OFFSET),
+    # ("maj7", triadBuilder.MAJ7_OFFSET),
+    # ("min7", triadBuilder.MIN7_OFFSET),
+    # ("7", triadBuilder.DOM7_OFFSET),
+    # ("sus4", triadBuilder.SUS4_OFFSET)
 ]
 
 notes = triadBuilder.notes
@@ -18,17 +22,19 @@ def detectChord():
         return None
     scores = []
     pitchResults = pitchClassProfile.pitchClassProfile(recording, sampleRate)
+    for note, value in pitchResults.items():
+        print(f"{note}: {value:.3f}")
     compressedResults = {note: value ** 0.5 for note, value in pitchResults.items()} # Reduces the effect of open strings without altering which notes are present (see notes!!)
     for note in pitchResults.keys():
         for chord in QUALITIES:
             triad = triadBuilder.buildTriad(note, chord[1])
-            #oldScore = scoreTriads.scoreTriads(triad, compressedResults)
-
+            oldScore = scoreTriads.scoreTriads(triad, compressedResults)
             triadProfile = triadBuilder.expectedProfileForTriad(triad)
             newScore = _cosineSimilarity(triadProfile, compressedResults)
             chordName = f"{note} {chord[0]}"
             chordScore = (chordName, triad, newScore)
             scores.append(chordScore)
+            print(f"Old score {chordName} -> {oldScore}")
 
 
     scores.sort(reverse=True, key=lambda x: x[2])
@@ -36,7 +42,7 @@ def detectChord():
     secondBest = scores[1]
     confidence = float(best[2] - secondBest[2])
     print(best[0], confidence, secondBest[0])
-    return best[0], confidence, secondBest[0]
+    return best[0], confidence, secondBest[0], scores
     # return scoresByOld, scoresByNew
 
 

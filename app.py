@@ -40,7 +40,7 @@ def chordLogic():
     result = chordDetector.detectChord()
     if result == None:
         return jsonify({"error": "No chord detected"})
-    best, confidence, secondBest = result
+    best, confidence, secondBest, scores = result
     return jsonify({
         "best" : best,
         "confidence" : confidence,
