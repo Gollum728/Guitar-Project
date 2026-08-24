@@ -1,8 +1,11 @@
 from flask import Flask, render_template, jsonify
 from tuner import tune
 from Chord_Detection import chordDetector
+from flask_sock import Sock
+import numpy as np
 
 app = Flask(__name__)
+sock = Sock(app)
 
 @app.route("/")
 def home():
@@ -12,6 +15,32 @@ def home():
 @app.route("/tuner")
 def tuner():
     return render_template("index.html")
+
+
+@sock.route("/audio")
+def audio_stream(ws):
+
+    print("WebSocket connected")
+
+    WINDOW_SIZE = 9600
+
+    audio_buffer = np.array([], dtype=np.int16)
+
+    while True:
+
+        data = ws.receive()
+
+        if data is None:
+            break
+
+        audio = np.frombuffer(data, dtype=np.int16)
+
+        audio_buffer = np.concatenate((audio_buffer, audio))
+
+        if len(audio_buffer) > WINDOW_SIZE:
+            audio_buffer = audio_buffer[-WINDOW_SIZE:]
+
+        print("Buffer:", len(audio_buffer), "samples")
 
 
 @app.route("/tunerLogic")
@@ -48,6 +77,9 @@ def chordLogic():
     })
 
 
+@app.route("/audioTest")
+def audioTest():
+    return render_template("test.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

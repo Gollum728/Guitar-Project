@@ -1,59 +1,144 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Recording Test</title>
+    <title>Audio WebSocket Test</title>
 </head>
+
 <body>
 
-    <h1>Recording Test</h1>
+    <button id="start">Start Recording</button>
+    <button id="stop" disabled>Stop Recording</button>
 
-    <button id="start-btn">Start Recording</button>
-    <button id="stop-btn" disabled>Stop Recording</button>
+    <p id="status">Not recording</p>
 
     <script>
-        let mediaRecorder;
-        let audioChunks = [];
 
-        const startBtn = document.getElementById("start-btn");
-        const stopBtn = document.getElementById("stop-btn");
+        let stream;
+        let socket;
+        let audioContext;
+        let audioSource;
+        let processor;
 
-        async function startTestRecording() {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
 
-            mediaRecorder.ondataavailable = (event) => {
-                audioChunks.push(event.data);
+        document.getElementById("start").addEventListener(
+            "click",
+            startRecording
+        );
+
+        document.getElementById("stop").addEventListener(
+            "click",
+            stopRecording
+        );
+
+
+        async function startRecording() {
+
+            // Ask for microphone access
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+
+
+            // Connect to Flask
+            socket = new WebSocket(
+                "ws://" + window.location.host + "/audio"
+            );
+
+
+            socket.onopen = async () => {
+
+                console.log("WebSocket connected");
+
+
+                // Create audio context
+                audioContext = new AudioContext();
+                console.log("Sample rate:", audioContext.sampleRate);
+
+
+                // Load our PCM processor
+                await audioContext.audioWorklet.addModule(
+                    "/static/pcm-worklet.js"
+                );
+
+
+                // Connect microphone to audio system
+                audioSource =
+                    audioContext.createMediaStreamSource(stream);
+
+
+                // Create our PCM processor
+                processor = new AudioWorkletNode(
+                    audioContext,
+                    "pcm-processor"
+                );
+
+
+                // Whenever PCM data is produced...
+                processor.port.onmessage = (event) => {
+
+                    if (socket.readyState === WebSocket.OPEN) {
+
+                        socket.send(event.data);
+
+                    }
+
+                };
+
+
+                // Microphone → processor
+                audioSource.connect(processor);
+
+
+                // Start the processor
+                processor.connect(audioContext.destination);
+
+
+                document.getElementById("status").textContent =
+                    "Recording...";
+
+                document.getElementById("start").disabled = true;
+                document.getElementById("stop").disabled = false;
             };
-
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const audio = new Audio(audioUrl);
-                audio.play();
-            };
-
-            mediaRecorder.start();
-            console.log("Recording started");
         }
 
-        function stopTestRecording() {
-            mediaRecorder.stop();
+
+        function stopRecording() {
+
+            if (processor) {
+                processor.disconnect();
+            }
+
+            if (audioSource) {
+                audioSource.disconnect();
+            }
+
+            if (audioContext) {
+                audioContext.close();
+            }
+
+            if (stream) {
+                stream.getTracks().forEach(
+                    track => track.stop()
+                );
+            }
+
+            if (socket) {
+                socket.close();
+            }
+
+
+            document.getElementById("status").textContent =
+                "Stopped";
+
+            document.getElementById("start").disabled = false;
+            document.getElementById("stop").disabled = true;
+
             console.log("Recording stopped");
         }
 
-        startBtn.addEventListener("click", () => {
-            startTestRecording();
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
-        });
-
-        stopBtn.addEventListener("click", () => {
-            stopTestRecording();
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-        });
     </script>
 
 </body>
+
 </html>

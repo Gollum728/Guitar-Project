@@ -1,27 +1,26 @@
-let mediaRecorder = [];
-let audioChunks = [];
+let mediaRecorder;
+let audioStream;
 
-async function startTestRecording(){
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-    mediaRecorder.ondataavilable = (event) => {
-        audioChunks.push(event.data);
+async function startRecording() {
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    mediaRecorder = new MediaRecorder(audioStream);
+
+    mediaRecorder.ondataavailable = (event) => {
+        console.log("Received audio chunk:", event.data.size, "bytes");
+
+        // We'll send this to Flask next
     };
 
-    mediaRecorder.onstop() = () => {
-        const audioBlob = new Blob(audioChunks, {type: "audio/webm"});
-        const audioURL = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioURL);
-        audio.play();
-    };
+    mediaRecorder.start(100);
 
-    mediaRecorder.start();
     console.log("Recording started");
-};
+}
 
-
-function stopTestRecording() {
+function stopRecording() {
     mediaRecorder.stop();
+
+    audioStream.getTracks().forEach(track => track.stop());
+
     console.log("Recording stopped");
-};
+}
