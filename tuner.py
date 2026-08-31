@@ -88,14 +88,14 @@ def tune(recording, soundFS):
     recording = recording.squeeze()
     recording = recording - np.mean(recording)
 
-    print(f"Recording: {time.perf_counter() - timer_start:.3f}s")
+    #print(f"Recording: {time.perf_counter() - timer_start:.3f}s")
 
     rms = np.sqrt(np.mean(recording ** 2))
     peak = np.max(np.abs(recording))
 
-    print(f"RMS: {rms:.5f}")
-    print(f"Peak: {peak:.5f}")
-    print(f"Analysed length: {len(recording) / soundFS:.3f}s")
+    # print(f"RMS: {rms:.5f}")
+    # print(f"Peak: {peak:.5f}")
+    # print(f"Analysed length: {len(recording) / soundFS:.3f}s")
 
     # Autocorrelation pitch detection
     pitch = autocorrelation.autocorrelation(recording, soundFS)

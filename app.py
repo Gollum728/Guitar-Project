@@ -4,6 +4,8 @@ from Chord_Detection import chordDetector
 from flask_sock import Sock
 import numpy as np
 import json
+from flask import request
+
 
 app = Flask(__name__)
 sock = Sock(app)
@@ -43,7 +45,7 @@ def audio_stream(ws):
 
             recording = audio_buffer[-WINDOW_SIZE:]
 
-            print("Analysing", len(recording), "samples")
+            #print("Analysing", len(recording), "samples")
 
             result = tune(recording, 48000)
 
@@ -84,16 +86,26 @@ def run_tuner():
 def showChordPage():
     return render_template("chordPage.html")
 
-@app.route("/chordLogic")
+@app.route("/chordLogic", methods=["POST"])
 def chordLogic():
-    result = chordDetector.detectChord()
-    if result == None:
+    data = request.get_json()
+
+    recording = np.array(data["recording"], dtype=np.float32)
+    sampleRate = data["sampleRate"]
+    result = chordDetector.detectChord(recording, 48000)
+
+    if result is None:
         return jsonify({"error": "No chord detected"})
+
     best, confidence, secondBest, scores = result
+    print("Recording length:", len(recording))
+    print("Recording min/max:", recording.min(), recording.max())
+    print("Recording RMS:", np.sqrt(np.mean(recording**2)))
+    print(scores)
     return jsonify({
-        "best" : best,
-        "confidence" : confidence,
-        "secondBest" : secondBest
+        "best": best,
+        "confidence": confidence,
+        "secondBest": secondBest
     })
 
 

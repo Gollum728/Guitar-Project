@@ -14,11 +14,16 @@ OPEN_STRINGS = {
 def autocorrelation(recording, sampleRate):
     recording = recording * 10
     recording = recording - np.mean(recording)
-    print("Recording samples:", len(recording))
-    print("Recording mean:", np.mean(recording))
-    print("Recording std:", np.std(recording))
-    print("Max amplitude:", np.max(np.abs(recording)))
-    print("RMS:", np.sqrt(np.mean(recording**2)))
+    rms = np.sqrt(np.mean(recording ** 2))
+    print(f"RMS: {rms:.2f}")
+    if rms < 1000:
+        print("No pitch detected")
+        return None
+    # print("Recording samples:", len(recording))
+    # print("Recording mean:", np.mean(recording))
+    # print("Recording std:", np.std(recording))
+    # print("Max amplitude:", np.max(np.abs(recording)))
+    # print("RMS:", np.sqrt(np.mean(recording**2)))
     # clipLevel = 0.3 * np.max(np.abs(recording))
     # recording = np.where(np.abs(recording) > clipLevel, recording, 0)
 
@@ -31,7 +36,7 @@ def autocorrelation(recording, sampleRate):
         denominator = np.sum(recording[:-lag]**2) + np.sum(recording[lag:]**2)
         nsdf = (2 * numerator) / denominator
         results.append(nsdf)
-    print("NSDF range:", min(results), max(results))
+    #print("NSDF range:", min(results), max(results))
     
     maxFrequency = 1500
     minLag = int(sampleRate / maxFrequency)
@@ -49,29 +54,54 @@ def autocorrelation(recording, sampleRate):
 
         window = results[lowIndex:highIndex]
 
+        if len(window) == 0:
+            continue
+
+        # Find the strongest NSDF value in this string's window
+        # Find the strongest NSDF value in this string's window
         localBestOffset = np.argmax(window)
+
         localBestIndex = lowIndex + localBestOffset
         localBestValue = window[localBestOffset]
-
         if localBestValue > bestValue:
             bestValue = localBestValue
             bestIndex = localBestIndex
             bestName = name
+
+        # #localBestOffset = np.argmax(window)
+        # threshold = 0.8 * np.max(window)
+
+        # candidateIndicies = np.where(window >= threshold)[0]
+        # if len(candidateIndicies) == 0:
+        #     continue
+        # localBestOffset = candidateIndicies[0]
+
+        # localBestIndex = lowIndex + localBestOffset
+        # localBestValue = window[localBestOffset]
+
+        # if localBestValue > bestValue:
+        #     bestValue = localBestValue
+        #     bestIndex = localBestIndex
+        #     bestName = name
     #     print(f"{name}: best index {localBestIndex}, NSDF {localBestValue:.3f}")
 
     # print(f"\nWinner: {bestName}, index {bestIndex}, NSDF {bestValue:.3f}")
 
-    if bestName is None or bestValue < 0.3:
+    if bestName is None or bestValue < 0.6:
         return None
     
     print("Selected string:", bestName)
     print("Selected NSDF:", bestValue)
     
     bestLag = bestIndex+minLag+1
-    bestLag+=p_i.parabolicInterpolationAuto(bestIndex, results)
-    frequency = sampleRate/bestLag
-    print("Selected frequency:", frequency)
 
+    if 0 < bestIndex < len(results) - 1:
+        if results[bestIndex] >= results[bestIndex - 1] and results[bestIndex] >= results[bestIndex + 1]:
+            bestLag += p_i.parabolicInterpolationAuto(bestIndex, results)
+
+    frequency = sampleRate / bestLag
+    print("Selected frequency:", frequency)
+    print(f"Detected: {bestName} | {frequency:.2f} Hz | NSDF: {bestValue:.3f}")
     return frequency
 
     
