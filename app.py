@@ -3,6 +3,7 @@ from tuner import tune
 from Chord_Detection import chordDetector
 from flask_sock import Sock
 import numpy as np
+import json
 
 app = Flask(__name__)
 sock = Sock(app)
@@ -22,9 +23,10 @@ def audio_stream(ws):
 
     print("WebSocket connected")
 
-    WINDOW_SIZE = 9600
-
     audio_buffer = np.array([], dtype=np.int16)
+
+    WINDOW_SIZE = 48000
+    STEP_SIZE = 4800
 
     while True:
 
@@ -37,10 +39,28 @@ def audio_stream(ws):
 
         audio_buffer = np.concatenate((audio_buffer, audio))
 
-        if len(audio_buffer) > WINDOW_SIZE:
-            audio_buffer = audio_buffer[-WINDOW_SIZE:]
+        if len(audio_buffer) >= WINDOW_SIZE:
 
-        print("Buffer:", len(audio_buffer), "samples")
+            recording = audio_buffer[-WINDOW_SIZE:]
+
+            print("Analysing", len(recording), "samples")
+
+            result = tune(recording, 48000)
+
+            if result is not None:
+
+                note, frequency, target_frequency, cents, status = result
+
+                ws.send(json.dumps({
+                    "type": "tuner",
+                    "note": note,
+                    "frequency": float(frequency),
+                    "targetFrequency": float(target_frequency),
+                    "cents": float(cents),
+                    "status": status
+                }))
+
+            audio_buffer = audio_buffer[STEP_SIZE:]
 
 
 @app.route("/tunerLogic")

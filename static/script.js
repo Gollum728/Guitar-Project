@@ -1,78 +1,135 @@
-let tuning = false;
+let stream;
+let socket;
+let audioContext;
+let audioSource;
+let processor;
+let lastNote = null;
+let noteCount = 0;
+let currentNote = null;
 
-const button = document.getElementById("tune-button");
+const tuneButton = document.getElementById("tune-button");
 
-
-async function tune() {
-
-    const response = await fetch("/tunerLogic");
-    const data = await response.json();
-
-    if (data.error) {
-        const status = document.getElementById("status");
-
-        status.textContent = "NO NOTE DETECTED";
-        status.className = "status no-note";
-        document.getElementById("status").textContent = "NO NOTE DETECTED";
-        document.getElementById("note").textContent = "--";
-        document.getElementById("frequency").textContent = "--";
-        document.getElementById("cents").textContent = "--";
+const noteElement = document.getElementById("note");
+const frequencyElement = document.getElementById("frequency");
+const centsElement = document.getElementById("cents");
+const statusElement = document.getElementById("status");
+const targetElement = document.getElementById("target");
+const indicatorElement = document.getElementById("indicator");
 
 
-        return;
-    }
-
-    document.getElementById("note").textContent = data.note;
-
-    document.getElementById("frequency").textContent =
-        data.frequency.toFixed(2) + " Hz";
-
-    document.getElementById("target").textContent =
-        "Target: " + data.target_frequency.toFixed(2) + " Hz";
-
-    document.getElementById("cents").textContent =
-        data.cents.toFixed(1) + " cents";
+tuneButton.addEventListener("click", startRecording);
 
 
-    const status = document.getElementById("status");
+async function startRecording() {
 
-    status.textContent = data.status.toUpperCase();
-
-    status.className = "status";
-
-    if (data.status === "In tune") {
-        status.classList.add("in-tune");
-    } else if (data.status === "Tune up") {
-        status.classList.add("tune-up");
-    } else if (data.status === "Tune down") {
-        status.classList.add("tune-down");
-    }
+    // Ask for microphone access
+    stream = await navigator.mediaDevices.getUserMedia({
+        audio: true
+    });
 
 
-    const indicator = document.getElementById("indicator");
-
-    const position = Math.max(-50, Math.min(50, data.cents));
-
-    indicator.style.left = `${50 + position}%`;
-}
+    // Connect to Flask
+    socket = new WebSocket(
+        "ws://" + window.location.host + "/audio"
+    );
 
 
-button.addEventListener("click", async () => {
+    // Receive tuner results from Python
+    socket.onmessage = (event) => {
 
-    tuning = !tuning;
+        const result = JSON.parse(event.data);
 
-    if (tuning) {
+        console.log("Tuner result:", result);
 
-        button.textContent = "Stop Tuning";
-
-        while (tuning) {
-            await tune();
+        if (result.type !== "tuner") {
+            return;
         }
 
-    } else {
+        // Check whether this is the same note as the previous result
+        if (result.note === lastNote) {
+            noteCount++;
+        } else {
+            lastNote = result.note;
+            noteCount = 1;
+        }
 
-        button.textContent = "Start Tuning";
+        // Only update the tuner after seeing the same note twice
+        if (noteCount >= 2) {
 
-    }
+            currentNote = result.note;
 
-});
+            document.getElementById("note").textContent =
+                result.note;
+
+            document.getElementById("frequency").textContent =
+                result.frequency.toFixed(2) + " Hz";
+
+            document.getElementById("cents").textContent =
+                result.cents.toFixed(1) + " cents";
+
+            document.getElementById("target").textContent =
+                "Target: " + result.targetFrequency.toFixed(2) + " Hz";
+
+            document.getElementById("status").textContent =
+                result.status.toUpperCase();
+        }
+    };
+
+
+    socket.onopen = async () => {
+
+        console.log("WebSocket connected");
+
+
+        // Create audio context
+        audioContext = new AudioContext();
+
+        console.log(
+            "Sample rate:",
+            audioContext.sampleRate
+        );
+
+
+        // Load our PCM processor
+        await audioContext.audioWorklet.addModule(
+            "/static/pcm-worklet.js"
+        );
+
+
+        // Connect microphone to audio system
+        audioSource =
+            audioContext.createMediaStreamSource(stream);
+
+
+        // Create PCM processor
+        processor = new AudioWorkletNode(
+            audioContext,
+            "pcm-processor"
+        );
+
+
+        // Whenever PCM data is produced...
+        processor.port.onmessage = (event) => {
+
+            if (socket.readyState === WebSocket.OPEN) {
+
+                socket.send(event.data);
+
+            }
+
+        };
+
+
+        // Microphone → processor
+        audioSource.connect(processor);
+
+
+        // Start the processor
+        processor.connect(audioContext.destination);
+
+
+        tuneButton.textContent = "Stop Tuning";
+
+        console.log("Tuning started");
+    };
+}

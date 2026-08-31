@@ -44,7 +44,14 @@
             socket = new WebSocket(
                 "ws://" + window.location.host + "/audio"
             );
+            
+            socket.onmessage = (event) => {
 
+                const result = JSON.parse(event.data);
+
+                console.log("Tuner result:", result);
+
+            };
 
             socket.onopen = async () => {
 

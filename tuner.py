@@ -7,8 +7,7 @@ import numpy as np
 from Pitch_Detection.Algorithms import autocorrelation
 from Pitch_Detection.Algorithms import mpm
 
-fs = 44100
-sd.default.samplerate = fs
+
 sd.default.channels = 1
 
 IN_TUNE_THRESHOLD = 5
@@ -81,11 +80,10 @@ def tune():
     print(f"Detected: {pitch:.2f} Hz | {note} | {cents:.1f} cents | {status}")
     return note, pitch, targetFrequency, cents, status
 """
-fs = 44100
-def tune():
-    timer_start = time.perf_counter()
 
-    recording, soundFS = record.recordAndReturn(0.75)
+
+def tune(recording, soundFS):
+    timer_start = time.perf_counter()
 
     recording = recording.squeeze()
     recording = recording - np.mean(recording)
@@ -125,12 +123,12 @@ def tune():
     else:
         status = "Tune up"
 
-    print(
-        f"Raw: {pitch:.2f} Hz | "
-        f"Corrected: {detectedFrequency:.2f} Hz | "
-        f"{note} | "
-        f"{cents:.1f} cents | "
-        f"{status}"
-    )
+    # print(
+    #     f"Raw: {pitch:.2f} Hz | "
+    #     f"Corrected: {detectedFrequency:.2f} Hz | "
+    #     f"{note} | "
+    #     f"{cents:.1f} cents | "
+    #     f"{status}"
+    # )
 
     return note, detectedFrequency, targetFrequency, cents, status

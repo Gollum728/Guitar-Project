@@ -37,7 +37,7 @@ def autocorrelation(recording, sampleRate):
     minLag = int(sampleRate / maxFrequency)
     results = results[minLag:]
 
-    tolerancePercent = 0.15
+    tolerancePercent = 0.07
     bestName, bestIndex, bestValue = None, None, -1.0
 
     for name, targetFreq in OPEN_STRINGS.items():
@@ -57,16 +57,21 @@ def autocorrelation(recording, sampleRate):
             bestValue = localBestValue
             bestIndex = localBestIndex
             bestName = name
-        print(f"{name}: best index {localBestIndex}, NSDF {localBestValue:.3f}")
+    #     print(f"{name}: best index {localBestIndex}, NSDF {localBestValue:.3f}")
 
-    print(f"\nWinner: {bestName}, index {bestIndex}, NSDF {bestValue:.3f}")
+    # print(f"\nWinner: {bestName}, index {bestIndex}, NSDF {bestValue:.3f}")
 
     if bestName is None or bestValue < 0.3:
         return None
     
+    print("Selected string:", bestName)
+    print("Selected NSDF:", bestValue)
+    
     bestLag = bestIndex+minLag+1
     bestLag+=p_i.parabolicInterpolationAuto(bestIndex, results)
     frequency = sampleRate/bestLag
+    print("Selected frequency:", frequency)
+
     return frequency
 
     

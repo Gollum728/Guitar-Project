@@ -15,8 +15,7 @@ QUALITIES = [
 
 notes = triadBuilder.notes
 
-def detectChord():
-    recording, sampleRate = record.recordAndReturn(0.75)
+def detectChord(recording, sampleRate):
     rms = np.sqrt(np.mean(recording ** 2))
     if rms < 0.005:
         return None
