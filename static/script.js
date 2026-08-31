@@ -58,7 +58,9 @@ async function startRecording() {
 
         // Connect to Flask
         socket = new WebSocket(
-            "ws://" + window.location.host + "/audio"
+            (window.location.protocol === "https:" ? "wss://" : "ws://")
+            + window.location.host
+            + "/audio"
         );
 
         // --------------------------------------------------
