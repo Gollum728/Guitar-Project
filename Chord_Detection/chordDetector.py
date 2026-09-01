@@ -21,6 +21,12 @@ def detectChord(recording, sampleRate):
         return None
     scores = []
     pitchResults = pitchClassProfile.pitchClassProfile(recording, sampleRate)
+    
+    values = np.array(list(pitchResults.values()))
+    top_three = np.sort(values)[-3:]
+    if np.mean(top_three) < np.mean(values) * 1.3:
+        return None
+    
     for note, value in pitchResults.items():
         print(f"{note}: {value:.3f}")
     compressedResults = {note: value ** 0.5 for note, value in pitchResults.items()} # Reduces the effect of open strings without altering which notes are present (see notes!!)
@@ -39,6 +45,11 @@ def detectChord(recording, sampleRate):
     scores.sort(reverse=True, key=lambda x: x[2])
     best = scores[0]
     secondBest = scores[1]
+
+    # Reject recordings that don't sufficiently match any chord.
+    if best[2] < 0.65:
+        return None
+
     confidence = float(best[2] - secondBest[2])
     print(best[0], confidence, secondBest[0])
     return best[0], confidence, secondBest[0], scores
