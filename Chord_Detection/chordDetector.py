@@ -17,7 +17,7 @@ notes = triadBuilder.notes
 
 def detectChord(recording, sampleRate):
     rms = np.sqrt(np.mean(recording ** 2))
-    if rms < 0.005:
+    if rms < 0.03:
         return None
     scores = []
     pitchResults = pitchClassProfile.pitchClassProfile(recording, sampleRate)

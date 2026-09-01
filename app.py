@@ -64,21 +64,28 @@ def audio_stream(ws):
 
             audio_buffer = audio_buffer[STEP_SIZE:]
 
+@app.route("/tunerLogic", methods=["POST"])
+def tunerLogic():
+    data = request.get_json()
 
-@app.route("/tunerLogic")
-def run_tuner():
-    result = tune()
+    recording = np.array(data["recording"], dtype=np.int16)
+    sampleRate = data["sampleRate"]
+
+    print("TUNER RECEIVED:", len(recording), "samples")
+    print("TUNER RMS:", np.sqrt(np.mean(recording.astype(np.float32) ** 2)))
+
+    result = tune(recording, sampleRate)
 
     if result is None:
-        return jsonify({"error": "No note detected"})
+        return jsonify({"error": "No pitch detected"})
 
-    note, frequency, target_frequency, cents, status = result
+    note, frequency, targetFrequency, cents, status = result
 
     return jsonify({
         "note": note,
-        "frequency": frequency,
-        "target_frequency": target_frequency,
-        "cents": cents,
+        "frequency": float(frequency),
+        "targetFrequency": float(targetFrequency),
+        "cents": float(cents),
         "status": status
     })
 
@@ -92,7 +99,7 @@ def chordLogic():
 
     recording = np.array(data["recording"], dtype=np.float32)
     sampleRate = data["sampleRate"]
-    result = chordDetector.detectChord(recording, 48000)
+    result = chordDetector.detectChord(recording, sampleRate)
 
     if result is None:
         return jsonify({"error": "No chord detected"})

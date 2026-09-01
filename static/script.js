@@ -1,5 +1,4 @@
 let stream = null;
-let socket = null;
 let audioContext = null;
 let audioSource = null;
 let processor = null;
@@ -14,10 +13,15 @@ let pendingCount = 0;
 
 let lastGoodResult = null;
 let lastGoodTime = 0;
+let lastDetectionTime = 0;
 
-const HOLD_TIME = 400;
-const NOTE_CONFIRMATIONS = 3;
+const HOLD_TIME = 500;
+const NOTE_CONFIRMATIONS = 2;
 
+
+// --------------------------------------------------
+// Elements
+// --------------------------------------------------
 
 const tuneButton = document.getElementById("tune-button");
 
@@ -51,194 +55,305 @@ tuneButton.addEventListener("click", () => {
 async function startRecording() {
 
     try {
+
         // Ask for microphone access
         stream = await navigator.mediaDevices.getUserMedia({
-            audio: true
+            audio: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false
+            }
         });
 
-        // Connect to Flask
-        socket = new WebSocket(
-            (window.location.protocol === "https:" ? "wss://" : "ws://")
-            + window.location.host
-            + "/audio"
+
+        // Create audio context
+        audioContext = new AudioContext();
+
+        console.log(
+            "Sample rate:",
+            audioContext.sampleRate
         );
 
+
+        // Load PCM processor
+        await audioContext.audioWorklet.addModule(
+            "/static/pcm-worklet.js"
+        );
+
+
+        // Connect microphone
+        audioSource =
+            audioContext.createMediaStreamSource(stream);
+
+
+        // Create processor
+        processor = new AudioWorkletNode(
+            audioContext,
+            "pcm-processor"
+        );
+
+
         // --------------------------------------------------
-        // Receive tuner results from Python
+        // Audio buffer
         // --------------------------------------------------
 
-        socket.onmessage = (event) => {
+        let audioBuffer = [];
 
-        const result = JSON.parse(event.data);
 
-        if (result.type !== "tuner") {
-            return;
-        }
+        // Use 0.5 seconds of audio instead of 1 second
+        const WINDOW_SIZE =
+            Math.floor(audioContext.sampleRate * 0.5);
+
+
+        // Analyse every 0.1 seconds
+        const STEP_SIZE =
+            Math.floor(audioContext.sampleRate * 0.1);
+
+
+        let samplesSinceAnalysis = 0;
+        let processing = false;
+
 
         // --------------------------------------------------
-        // No pitch detected
+        // Receive PCM data
         // --------------------------------------------------
 
-        if (!result.note || result.frequency == null) {
+        processor.port.onmessage = async (event) => {
 
-            // Keep the last good result on screen briefly
-            if (
-                lastGoodResult !== null &&
-                Date.now() - lastGoodTime < HOLD_TIME
-            ) {
-                updateDisplay(lastGoodResult);
+            const pcm =
+                new Int16Array(event.data);
+
+
+            // Add new samples
+            audioBuffer.push(...pcm);
+
+            samplesSinceAnalysis += pcm.length;
+
+
+            // Not enough new audio yet
+            if (audioBuffer.length < WINDOW_SIZE) {
+                return;
             }
 
-            return;
-        }
 
-        // We have a valid detection
-        lastGoodResult = result;
-        lastGoodTime = Date.now();
+            // Wait until another 0.1 seconds of audio
+            // has arrived before analysing again
+            if (samplesSinceAnalysis < STEP_SIZE) {
+                return;
+            }
 
-        // --------------------------------------------------
-        // First valid detection
-        // --------------------------------------------------
 
-        if (currentNote === null) {
-            currentNote = result.note;
-            currentFrequency = result.frequency;
+            // Don't overlap HTTP requests
+            if (processing) {
+                return;
+            }
 
-            updateDisplay(result);
 
-            return;
-        }
+            processing = true;
+            samplesSinceAnalysis = 0;
 
-        // --------------------------------------------------
-        // Same note
-        // --------------------------------------------------
 
-        if (result.note === currentNote) {
-            // Smooth frequency changes
-            const smoothing = 0.15;
+            // Take most recent window
+            const recording =
+                audioBuffer.slice(
+                    audioBuffer.length - WINDOW_SIZE
+                );
 
-            currentFrequency =
-                currentFrequency +
-                (result.frequency - currentFrequency) * smoothing;
 
-            updateDisplay({
-                ...result,
-                frequency: currentFrequency
-            });
+            // Keep only enough audio for overlap
+            audioBuffer =
+                audioBuffer.slice(
+                    audioBuffer.length - WINDOW_SIZE + STEP_SIZE
+                );
 
-            // Cancel any pending note
-            pendingNote = null;
-            pendingCount = 0;
 
-            return;
-        }
+            try {
 
-        // --------------------------------------------------
-        // Different note
-        // --------------------------------------------------
+                // --------------------------------------------------
+                // Send recording to Python
+                // --------------------------------------------------
 
-        if (result.note === pendingNote) {
-            pendingCount++;
-        } else {
-            pendingNote = result.note;
-            pendingCount = 1;
-        }
+                const response =
+                    await fetch(
+                        "/tunerLogic",
+                        {
+                            method: "POST",
 
-        // Only change displayed note after
-        // several consistent detections
-        if (pendingCount >= NOTE_CONFIRMATIONS) {
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
 
-            currentNote = result.note;
-            currentFrequency = result.frequency;
+                            body: JSON.stringify({
+                                recording: recording,
+                                sampleRate:
+                                    audioContext.sampleRate
+                            })
+                        }
+                    );
 
-            pendingNote = null;
-            pendingCount = 0;
 
-            updateDisplay(result);
-        }
+                const result =
+                    await response.json();
 
-    };
-        // --------------------------------------------------
-        // WebSocket opened
-        // --------------------------------------------------
 
-        socket.onopen = async () => {
-            console.log("WebSocket connected");
+                // --------------------------------------------------
+                // No pitch detected
+                // --------------------------------------------------
 
-            // Create audio context
-            audioContext = new AudioContext();
+                if (result.error) {
+                    // Keep showing the last note briefly while it decays
+                    if (
+                        lastGoodResult !== null &&
+                        Date.now() - lastDetectionTime < HOLD_TIME
+                    ) {
+                        updateDisplay(lastGoodResult);
+                    } else {
+                        // Enough time has passed without detecting a pitch:
+                        // reset the tuner display
+                        noteElement.textContent = "--";
+                        frequencyElement.textContent = "-- Hz";
+                        centsElement.textContent = "-- cents";
+                        targetElement.textContent = "Target: --";
+                        statusElement.textContent = "LISTENING";
 
-            console.log(
-                "Sample rate:",
-                audioContext.sampleRate
-            );
+                        resetIndicator();
 
-            // Load PCM processor
-            await audioContext.audioWorklet.addModule(
-                "/static/pcm-worklet.js"
-            );
+                        currentNote = null;
+                        currentFrequency = null;
 
-            // Connect microphone
-            audioSource =
-                audioContext.createMediaStreamSource(stream);
-
-            // Create PCM processor
-            processor = new AudioWorkletNode(
-                audioContext,
-                "pcm-processor"
-            );
-            // --------------------------------------------------
-            // Receive PCM data from AudioWorklet
-            // --------------------------------------------------
-            processor.port.onmessage = (event) => {
-
-                if (
-                    !socket ||
-                    socket.readyState !== WebSocket.OPEN
-                ) {
+                        pendingNote = null;
+                        pendingCount = 0;
+                    }
                     return;
                 }
 
 
-                socket.send(event.data);
+                // --------------------------------------------------
+                // Valid detection
+                // --------------------------------------------------
 
-            };
+                lastGoodResult = result;
+                lastGoodTime = Date.now();
 
-            // Microphone → processor
-            audioSource.connect(processor);
 
-            // Keep processor running
-            processor.connect(
-                audioContext.destination
-            );
+                // --------------------------------------------------
+                // First detection
+                // --------------------------------------------------
 
-            tuning = true;
-            tuneButton.textContent = "Stop Tuning";
-            resetDisplay();
-            statusElement.textContent = "LISTENING";
-            console.log("Tuning started");
+                if (currentNote === null) {
+
+                    currentNote = result.note;
+                    currentFrequency = result.frequency;
+
+                    updateDisplay(result);
+
+                    return;
+                }
+                // --------------------------------------------------
+                // Same note
+                // --------------------------------------------------
+
+                if (result.note === currentNote) {
+
+                    // Smooth frequency
+                    const smoothing = 0.25;
+
+                    currentFrequency =
+                        currentFrequency +
+                        (
+                            result.frequency -
+                            currentFrequency
+                        ) * smoothing;
+
+
+                    updateDisplay({
+                        ...result,
+                        frequency:
+                            currentFrequency
+                    });
+
+
+                    // Cancel pending note
+                    pendingNote = null;
+                    pendingCount = 0;
+
+                    return;
+                }
+
+
+                // --------------------------------------------------
+                // Different note
+                // --------------------------------------------------
+
+                if (result.note === pendingNote) {
+
+                    pendingCount++;
+
+                } else {
+
+                    pendingNote = result.note;
+                    pendingCount = 1;
+                }
+
+
+                // Change note after consistent detections
+                if (
+                    pendingCount >= NOTE_CONFIRMATIONS
+                ) {
+
+                    currentNote = result.note;
+                    currentFrequency = result.frequency;
+
+                    pendingNote = null;
+                    pendingCount = 0;
+
+                    updateDisplay(result);
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Tuner request error:",
+                    error
+                );
+
+            } finally {
+
+                processing = false;
+            }
 
         };
+
+
         // --------------------------------------------------
-        // WebSocket closed
+        // Microphone → processor
         // --------------------------------------------------
 
-        socket.onclose = () => {
+        audioSource.connect(processor);
 
-            console.log("WebSocket disconnected");
 
-        };
-        // --------------------------------------------------
-        // WebSocket error
-        // --------------------------------------------------
-        socket.onerror = (error) => {
+        // Keep processor running
+        processor.connect(
+            audioContext.destination
+        );
 
-            console.error(
-                "WebSocket error:",
-                error
-            );
 
-        };
+        tuning = true;
+
+        tuneButton.textContent =
+            "Stop Tuning";
+
+        resetDisplay();
+
+        statusElement.textContent =
+            "LISTENING";
+
+        console.log(
+            "Tuning started"
+        );
+
 
     } catch (error) {
 
@@ -251,7 +366,6 @@ async function startRecording() {
 
         statusElement.textContent =
             "MICROPHONE ERROR";
-
     }
 
 }
@@ -262,11 +376,15 @@ async function startRecording() {
 // --------------------------------------------------
 
 function stopTuning() {
+
     console.log("Stopping tuner");
+
     tuning = false;
+
 
     // Stop microphone
     if (stream) {
+
         stream.getTracks().forEach(
             track => track.stop()
         );
@@ -274,32 +392,29 @@ function stopTuning() {
         stream = null;
     }
 
+
     // Disconnect audio nodes
     if (audioSource) {
+
         audioSource.disconnect();
         audioSource = null;
     }
 
+
     if (processor) {
+
         processor.disconnect();
         processor = null;
     }
 
+
     // Close audio context
     if (audioContext) {
+
         audioContext.close();
         audioContext = null;
     }
 
-    // Close WebSocket
-    if (
-        socket &&
-        socket.readyState === WebSocket.OPEN
-    ) {
-        socket.close();
-    }
-
-    socket = null;
 
     // Reset detection state
     currentNote = null;
@@ -308,15 +423,18 @@ function stopTuning() {
     pendingNote = null;
     pendingCount = 0;
 
-    lastGoodResult = null;
-    lastGoodTime = 0;
+
+    lastGoodResult = result;
+    lastGoodTime = Date.now();
+    lastDetectionTime = Date.now();
 
 
     // Reset UI
     resetDisplay();
 
 
-    tuneButton.textContent = "Start Tuning";
+    tuneButton.textContent =
+        "Start Tuning";
 
 }
 
@@ -326,6 +444,7 @@ function stopTuning() {
 // --------------------------------------------------
 
 function resetDisplay() {
+
     noteElement.textContent = "--";
     frequencyElement.textContent = "-- Hz";
     centsElement.textContent = "-- cents";
@@ -334,6 +453,7 @@ function resetDisplay() {
 
     lastGoodResult = null;
     lastGoodTime = 0;
+
     pendingNote = null;
     pendingCount = 0;
 
@@ -351,6 +471,8 @@ function updateIndicator(cents) {
     if (!indicatorElement) {
         return;
     }
+
+
     /*
         Move the indicator according to cents.
 
@@ -362,8 +484,10 @@ function updateIndicator(cents) {
     const limitedCents =
         Math.max(-50, Math.min(50, cents));
 
+
     const percentage =
         ((limitedCents + 50) / 100) * 100;
+
 
     indicatorElement.style.left =
         percentage + "%";
@@ -380,9 +504,11 @@ function resetIndicator() {
     if (!indicatorElement) {
         return;
     }
+
     indicatorElement.style.left = "50%";
 
 }
+
 
 // --------------------------------------------------
 // Update tuner display
@@ -393,20 +519,25 @@ function updateDisplay(result) {
     noteElement.textContent =
         result.note;
 
+
     frequencyElement.textContent =
         result.frequency.toFixed(2) + " Hz";
 
+
     centsElement.textContent =
         result.cents.toFixed(1) + " cents";
+
 
     targetElement.textContent =
         "Target: " +
         result.targetFrequency.toFixed(2) +
         " Hz";
 
+
     statusElement.textContent =
         result.status.toUpperCase();
-    updateIndicator(result.cents);
 
+
+    updateIndicator(result.cents);
 
 }

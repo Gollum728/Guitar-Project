@@ -10,11 +10,9 @@ class ChordProcessor extends AudioWorkletProcessor {
 
         const samples = input[0];
 
-        // Copy the Float32 samples so the buffer
-        // remains valid after process() returns.
-        const recording = new Float32Array(samples);
-
-        this.port.postMessage(Array.from(recording));
+        // Send the Float32 PCM buffer directly.
+        // No Array.from() conversion needed.
+        this.port.postMessage(samples.slice());
 
         return true;
     }
