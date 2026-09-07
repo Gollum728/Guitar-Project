@@ -14,7 +14,6 @@ async function detectChord() {
     button.textContent = "Listening...";
 
     try {
-
         // Ask for microphone access
         stream = await navigator.mediaDevices.getUserMedia({
             audio: {
@@ -24,11 +23,6 @@ async function detectChord() {
             }
         });
 
-
-        /*
-            Request the same sample rate used by the
-            old Python sounddevice recorder.
-        */
         audioContext = new AudioContext({
             sampleRate: 44100
         });
@@ -50,7 +44,7 @@ async function detectChord() {
             audioContext.createMediaStreamSource(stream);
 
 
-        // Create processor
+        // Create processor which processes the audio
         processor = new AudioWorkletNode(
             audioContext,
             "chord-processor"
@@ -67,21 +61,16 @@ async function detectChord() {
                 0.75 * audioContext.sampleRate
             );
 
-
+        // Contains the samples the worklet sent
         processor.port.onmessage = (event) => {
-
             const samples = event.data;
-
             chunks.push(samples);
-
             totalSamples += samples.length;
-
         };
 
 
-        // Microphone → processor
+        // Microphone -> processor
         audioSource.connect(processor);
-
 
         /*
             Wait until we have collected exactly
@@ -93,23 +82,14 @@ async function detectChord() {
             with the requested time.
         */
         await new Promise(resolve => {
-
             const checkSamples = () => {
-
                 if (totalSamples >= TARGET_SAMPLES) {
-
                     resolve();
-
                 } else {
-
                     requestAnimationFrame(checkSamples);
-
                 }
-
             };
-
             checkSamples();
-
         });
 
 
@@ -117,24 +97,19 @@ async function detectChord() {
         audioSource.disconnect();
         processor.disconnect();
 
-
+        // Stops the microphone stream
         stream.getTracks().forEach(
             track => track.stop()
         );
 
 
-        /*
-            Combine all Float32 chunks into one recording.
-        */
+        
 
-        const recording =
-            new Float32Array(totalSamples);
-
+        const recording = new Float32Array(totalSamples);
         let offset = 0;
 
-
+        // Combines all the chunks together to create one final recording
         for (const chunk of chunks) {
-
             const remaining =
                 TARGET_SAMPLES - offset;
 
@@ -150,11 +125,9 @@ async function detectChord() {
             );
 
             offset += length;
-
             if (offset >= TARGET_SAMPLES) {
                 break;
             }
-
         }
 
 
@@ -175,13 +148,11 @@ async function detectChord() {
             "/chordLogic",
             {
                 method: "POST",
-
                 headers: {
                     "Content-Type": "application/json"
                 },
-
                 body: JSON.stringify({
-                    recording: Array.from(recording),
+                    recording: Array.from(recording), // Array.from() converts it from Float32 format to JavaScript, which can then be sent as JSON
                     sampleRate: audioContext.sampleRate
                 })
             }
@@ -192,7 +163,6 @@ async function detectChord() {
 
 
         if (data.error) {
-
             document.getElementById(
                 "confidence-status"
             ).textContent = "--";
@@ -218,28 +188,23 @@ async function detectChord() {
             "chord"
         ).textContent = data.best;
 
-
         document.getElementById(
             "score"
         ).textContent =
             `Match: ${(data.confidence * 100).toFixed(1)}%`;
 
-
         const isConfident =
             data.confidence >= 0.025;
-
 
         const statusEl =
             document.getElementById(
                 "confidence-status"
             );
 
-
         statusEl.textContent =
             isConfident
                 ? "CONFIDENT"
                 : "UNCERTAIN";
-
 
         statusEl.className =
             "status " +
@@ -249,15 +214,12 @@ async function detectChord() {
                     : "uncertain"
             );
 
-
         const secondGuessEl =
             document.getElementById(
                 "second-guess"
             );
 
-
         if (!isConfident) {
-
             secondGuessEl.textContent =
                 `Could also be ${data.secondBest}`;
 
@@ -266,7 +228,6 @@ async function detectChord() {
             );
 
         } else {
-
             secondGuessEl.classList.remove(
                 "visible"
             );
@@ -275,20 +236,15 @@ async function detectChord() {
 
 
     } catch (error) {
-
         console.error(
             "Chord detection error:",
             error
         );
 
     } finally {
-
         if (audioContext) {
-
             await audioContext.close();
-
             audioContext = null;
-
         }
 
         stream = null;

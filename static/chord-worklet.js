@@ -12,7 +12,8 @@ class ChordProcessor extends AudioWorkletProcessor {
 
         // Send the Float32 PCM buffer directly.
         // No Array.from() conversion needed.
-        this.port.postMessage(samples.slice());
+        this.port.postMessage(samples.slice()); // Creates a copy which makes it safe to pass on the samples afterwards
+        // this.port creates a connection between the JavaScript and AudioWorklet
 
         return true;
     }

@@ -2,7 +2,7 @@ let mediaRecorder;
 let audioStream;
 
 async function startRecording() {
-    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
 
     mediaRecorder = new MediaRecorder(audioStream);
 

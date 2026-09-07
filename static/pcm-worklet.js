@@ -1,10 +1,10 @@
 class PCMProcessor extends AudioWorkletProcessor {
-    process(inputs) {
+    process(inputs) { //Rather than giving the full recording, the browser gives small chunks of audio at a time
         const input = inputs[0];
         if (!input || !input[0]) {
             return true;
         }
-        const samples = input[0];
+        const samples = input[0]; //  Gives Float32 samples from the first audio channel
         const pcm = new Int16Array(samples.length);
         for (let i = 0; i < samples.length; i++) {
             const sample = Math.max(-1, Math.min(1, samples[i]));

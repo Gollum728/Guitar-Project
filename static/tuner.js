@@ -5,17 +5,16 @@ let processor;
 
 async function startTuner() {
 
-    // Get microphone
     stream = await navigator.mediaDevices.getUserMedia({
         audio: true
-    });
+    }); // Asks for access for the user's microphone
 
 
     // Create audio system
-    audioContext = new AudioContext();
+    audioContext = new AudioContext(); // Environment where the browser processes audio
 
 
-    // Load our audio processor
+    // Load the audio processor
     await audioContext.audioWorklet.addModule(
         "/static/pcm-worklet.js"
     );
