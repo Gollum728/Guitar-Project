@@ -30,4 +30,9 @@ Since multiple notes are present simultaneously, a different approach is needed.
 Python, NumPy, Flask, JavaScript (Web Audio API)
 
 ## Setup
-[pip install -r requirements.txt, how to run app.py locally]
+1. Clone the repo: `git clone https://github.com/Gollum728/Guitar-Project.git`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run the app: `python app.py`
+4. Open `http://127.0.0.1:5000` in your browser
+
+Note: microphone access requires a secure context — `localhost` works fine, but the app will only function correctly over HTTPS if accessed from anywhere else.
