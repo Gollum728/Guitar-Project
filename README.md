@@ -35,9 +35,7 @@ A regression test script (`test_pitch_detection.py`) validates pitch detection a
 - One guitar recording returned no detection, as its NSDF confidence score fell just below the detector's threshold — likely due to a quieter pluck in that specific recording.
 
 Run the tests with:
-\`\`\`
-python test_pitch_detection.py
-\`\`\`
+`python test_pitch_detection.py`
 
 ## Tech stack
 Python, NumPy, Flask, JavaScript (Web Audio API)
