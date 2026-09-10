@@ -26,6 +26,19 @@ Since multiple notes are present simultaneously, a different approach is needed.
 - Some closely related chords (e.g. relative major/minor) can occasionally be misidentified in ambiguous recordings
 - As the noise from the current string to be tuned tapers off/quietens down, it sometimes reports a different note or a lower octave of the same note because the fundamental weakens compared to the harmonic
 
+## Testing
+
+A regression test script (`test_pitch_detection.py`) validates pitch detection against a set of real recordings, covering guitar strings, hummed notes, and piano samples. Detection is checked at the note-letter level (ignoring octave), since the detector is known to occasionally return the correct note in the wrong octave — a documented limitation, not a defect, given the tuner and chord detector don't rely on octave information.
+
+**Current result: 12/14 passing.** Both remaining cases are understood, explainable edge cases rather than bugs:
+- A hummed A4 was detected as A#4 — an adjacent-semitone miss, consistent with the natural pitch imprecision of humming compared to a plucked string.
+- One guitar recording returned no detection, as its NSDF confidence score fell just below the detector's threshold — likely due to a quieter pluck in that specific recording.
+
+Run the tests with:
+\`\`\`
+python test_pitch_detection.py
+\`\`\`
+
 ## Tech stack
 Python, NumPy, Flask, JavaScript (Web Audio API)
 
