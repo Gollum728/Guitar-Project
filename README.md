@@ -20,11 +20,13 @@ Since multiple notes are present simultaneously, a different approach is needed.
 - Custom NSDF-based autocorrelation with windowed search to resolve harmonic/octave ambiguity
 - FFT-based pitch-class profiling for chord detection, using harmonic-weighted expected profiles and cosine similarity for matching
 - Diagnosed and resolved issues including octave errors, harmonic dominance, and note-doubling in open-string chord voicings
+- Detection can occasionally fail to register at all ("No chord detected") if the recording volume is too low, since a silence-guard threshold runs before chord analysis — sensitivity to mic distance/volume varies slightly by chord voicing.
 
 ## Known limitations
 - Chord detection is scoped to major/minor triads (7ths, sus chords not yet supported)
 - Some closely related chords (e.g. relative major/minor) can occasionally be misidentified in ambiguous recordings
 - As the noise from the current string to be tuned tapers off/quietens down, it sometimes reports a different note or a lower octave of the same note because the fundamental weakens compared to the harmonic
+- Detection can occasionally fail to register at all ("No chord detected") if the recording volume is too low, since a silence-guard threshold runs before chord analysis — sensitivity to mic distance/volume varies slightly by chord voicing.
 
 ## Testing
 
