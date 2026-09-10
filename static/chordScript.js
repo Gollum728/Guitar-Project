@@ -191,7 +191,7 @@ async function detectChord() {
         document.getElementById(
             "score"
         ).textContent =
-            `Match: ${(data.confidence * 100).toFixed(1)}%`;
+            `Match: ${(data.matchScore * 100).toFixed(1)}%`;
 
         const isConfident =
             data.confidence >= 0.025;

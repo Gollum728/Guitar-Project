@@ -110,9 +110,10 @@ def chordLogic():
     print("Recording RMS:", np.sqrt(np.mean(recording**2)))
     print(scores)
     return jsonify({
-        "best": best,
+        "best": best[0],
+        "matchScore" : best[2],
         "confidence": confidence,
-        "secondBest": secondBest
+        "secondBest": secondBest[0]
     })
 
 

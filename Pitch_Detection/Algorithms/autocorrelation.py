@@ -215,3 +215,46 @@ def autocorrelation(recording, sampleRate):
     
     #plot.plot_autocorrelation(results)
     return frequency
+
+
+def autocorrelationAllNotes(recording, sampleRate):
+    recording = recording * 10
+    recording = recording - np.mean(recording)
+
+    rms = np.sqrt(np.mean(recording ** 2))
+    if rms < 1000:
+        return None
+
+    results = []
+    for lag in range(1, 750):
+        numerator = np.sum(recording[lag:] * recording[:-lag])
+        denominator = np.sum(recording[:-lag] ** 2) + np.sum(recording[lag:] ** 2)
+        nsdf = (2 * numerator) / denominator
+        results.append(nsdf)
+
+    maxFrequency = 1500
+    minLag = int(sampleRate / maxFrequency)
+    results = results[minLag:]
+
+    threshold = 0.6 * max(results)
+
+    peaks = []
+    for i in range(1, len(results) - 1):
+        if (results[i] >= results[i - 1] and
+            results[i] > results[i + 1] and
+            results[i] > threshold):
+            peaks.append((i, results[i]))
+
+    if not peaks:
+        return None
+
+    bestIndex, bestValue = max(peaks, key=lambda peak: peak[1])
+
+    bestLag = bestIndex + minLag + 1
+
+    if 0 < bestIndex < len(results) - 1:
+        if results[bestIndex] >= results[bestIndex - 1] and results[bestIndex] >= results[bestIndex + 1]:
+            bestLag += p_i.parabolicInterpolationAuto(bestIndex, results)
+
+    frequency = sampleRate / bestLag
+    return frequency

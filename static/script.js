@@ -202,7 +202,8 @@ async function startRecording() {
 
                 lastGoodResult = result;
                 lastGoodTime = Date.now();
-
+                lastDetectionTime = Date.now();
+                
                 // --------------------------------------------------
                 // First detection
                 // --------------------------------------------------
@@ -361,10 +362,6 @@ function stopTuning() {
 
     pendingNote = null;
     pendingCount = 0;
-
-    lastGoodResult = result;
-    lastGoodTime = Date.now();
-    lastDetectionTime = Date.now();
 
     // Reset UI
     resetDisplay();

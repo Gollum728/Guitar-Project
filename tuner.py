@@ -1,14 +1,8 @@
-import sounddevice as sd
 import determineNote
-import record
-from Pitch_Detection import detector
 import time
 import numpy as np
 from Pitch_Detection.Algorithms import autocorrelation
-from Pitch_Detection.Algorithms import mpm
 
-
-sd.default.channels = 1
 
 IN_TUNE_THRESHOLD = 5
 MIC_THRESHOLD = 0.005

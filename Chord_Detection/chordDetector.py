@@ -2,7 +2,6 @@ from Chord_Detection import pitchClassProfile
 from Chord_Detection import scoreTriads
 from Chord_Detection import triadBuilder
 import numpy as np
-import record
 
 QUALITIES = [
     ("major", triadBuilder.MAJOR_OFFSET),
@@ -17,7 +16,7 @@ notes = triadBuilder.notes
 
 def detectChord(recording, sampleRate):
     rms = np.sqrt(np.mean(recording ** 2))
-    if rms < 0.03:
+    if rms < 0.01:
         return None
     scores = []
     pitchResults = pitchClassProfile.pitchClassProfile(recording, sampleRate)
@@ -52,7 +51,7 @@ def detectChord(recording, sampleRate):
 
     confidence = float(best[2] - secondBest[2])
     print(best[0], confidence, secondBest[0])
-    return best[0], confidence, secondBest[0], scores
+    return best, confidence, secondBest, scores
     # return scoresByOld, scoresByNew
 
 
